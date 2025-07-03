@@ -138,7 +138,7 @@ class GameState
 
 	void applyOrders(Order[] orders)
 	{
-		Order[] valid = orders.filter!(a => isValidOrder(a) == OrderStatus.OK).array;
+		auto valid = orders.filter!(a => isValidOrder(a) == OrderStatus.OK);
 
 		// Attacks first
 
@@ -159,11 +159,11 @@ class GameState
 
 		// Invalidate orders to destroyed units
 
-		valid = valid.filter!(order => hexes[order.coords].hp != 0).array;
+		auto alive = valid.filter!(order => hexes[order.coords].hp != 0);
 
 		// Movement
 
-		solveMovements(valid.filter!(a => a.kind == Order.Kind.MOVE).array);
+		solveMovements(alive.filter!(a => a.kind == Order.Kind.MOVE).array);
 
 		// Forage
 		// Spawns
