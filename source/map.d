@@ -25,6 +25,20 @@ struct Hex
 // Top-left corner is 0,0
 // Rows increase by 1, (vertical) columns increase by 2
 
+enum Direction
+{
+	E, SE, SW, W, NW, NE
+}
+
+const Coords[Direction] directionToOffset = [
+	Direction.E: Coords(+0, +2),
+	Direction.NE: Coords(-1, +1),
+	Direction.NW: Coords(-1, -1),
+	Direction.W: Coords(+0, -2),
+	Direction.SW: Coords(+1, -1),
+	Direction.SE: Coords(+1, +1)
+];
+
 struct Coords
 {
 	int row, col;
@@ -51,17 +65,17 @@ struct Coords
 		return rowCmp == 0 ? col - rhs.col : rowCmp;
 	}
 
-	static const Coords[] neighbourOffsets = [
-		Coords(+0, +2), Coords(-1, +1),
-		Coords(-1, -1), Coords(+0, -2),
-		Coords(+1, -1), Coords(+1, +1)
-	];
+	Coords neighbour(Direction dir)
+	{
+		return this + directionToOffset[dir];
+	}
 
 	Coords[] neighbours()
 	{
-		return neighbourOffsets.map!(offset => this + offset).array;
+		return directionToOffset.values.map!(offset => this + offset).array;
 	}
 }
+
 
 private const charToKind = [
 	'.': HexKind.EMPTY,
