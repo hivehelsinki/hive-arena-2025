@@ -1,3 +1,5 @@
+import std.algorithm;
+
 import game;
 import map;
 
@@ -13,7 +15,6 @@ class Order
 		BAD_PLAYER,
 
 		BLOCKED,
-		ATTACKED,
 		DESTROYED,
 
 		OK
@@ -58,12 +59,42 @@ class TargetOrder : Order
 
 class MoveOrder : TargetOrder
 {
+	override void apply(GameState state)
+	{
+		auto target = coords.neighbour(dir);
+		auto targetHex = state.hexes[target];
 
+		if (targetHex.kind != HexKind.EMPTY)
+		{
+			status = Status.BLOCKED;
+			return;
+		}
+
+		state.hexes[target] = state.hexes[coords];
+		state.hexes[coords] = Hex.init;
+
+		status = Status.OK;
+	}
 }
 
 class AttackOrder : TargetOrder
 {
+	override void apply(GameState state)
+	{
+		auto target = coords.neighbour(dir);
+		auto targetHex = state.hexes[target];
 
+		if (targetHex.kind.among(HexKind.BEE, HexKind.HIVE, HexKind.WALL))
+		{
+			targetHex.hp--;
+			if (targetHex.hp <= 0)
+				targetHex = Hex.init;
+
+			state.hexes[target] = targetHex;
+		}
+
+		status = Status.OK;
+	}
 }
 
 class ForageOrder : TargetOrder

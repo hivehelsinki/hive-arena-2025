@@ -1,4 +1,6 @@
 import std.stdio;
+import std.algorithm;
+import std.range;
 
 import game;
 import map;
@@ -11,7 +13,22 @@ void main()
 
 	write(game.hexes.mapToString);
 
-	auto foo = new MoveOrder();
+//	write(game.hexes.byPair.filter!(a => a.value.kind == HexKind.BEE));
 
-	game.applyOrders([foo]);
+	auto foo = new MoveOrder();
+	foo.player = 1;
+	foo.coords = Coords(2,14);
+	foo.dir = Direction.SE;
+
+	auto bar = new AttackOrder();
+	bar.player = 1;
+	bar.coords = Coords(2,12);
+	bar.dir = Direction.NE;
+
+
+	game.applyOrders([foo, bar]);
+	writeln(foo.status);
+
+	write(game.hexes.mapToString);
+	writeln(game.hexes[Coords(1,13)]);
 }

@@ -14,71 +14,6 @@ const ubyte[HexKind] maxHP = [
 	HexKind.EMPTY: 0,
 	HexKind.ROCK: 0
 ];
-//
-// class Order
-// {
-// 	enum Kind
-// 	{
-// 		MOVE,
-// 		HIVE,
-// 		BUILD,
-// 		ATTACK,
-// 		FORAGE,
-// 		SPAWN
-// 	}
-//
-// 	enum Status
-// 	{
-// 		PENDING,
-//
-// 		OUT_OF_BOUNDS,
-// 		TARGET_OUT_OF_BOUNDS,
-// 		BAD_UNIT,
-// 		ENNEMY_UNIT,
-//
-// 		BLOCKED,
-// 		ATTACKED,
-// 		DESTROYED,
-//
-// 		OK
-// 	}
-//
-// 	Status status;
-// 	ubyte player;
-// 	Kind kind;
-// 	Coords coords;
-// 	Direction dir;
-//
-// 	bool isBeeOrder()
-// 	{
-// 		return kind.among(
-// 			Kind.MOVE,
-// 			Kind.HIVE,
-// 			Kind.BUILD,
-// 			Kind.ATTACK,
-// 			Kind.FORAGE
-// 		) != 0;
-// 	}
-//
-// 	bool isHiveOrder()
-// 	{
-// 		return kind == Kind.SPAWN;
-// 	}
-//
-// 	bool hasTarget()
-// 	{
-// 		return kind.among(
-// 			Kind.MOVE,
-// 			Kind.BUILD,
-// 			Kind.ATTACK
-// 		) != 0;
-// 	}
-//
-// 	bool isLocal()
-// 	{
-// 		return !hasTarget;
-// 	}
-// }
 
 class GameState
 {
@@ -129,7 +64,23 @@ class GameState
 			order.validate(this);
 
 		foreach(order; orders)
-			if (order.status == Order.Status.PENDING)
-				order.apply(this);
+		{
+			// Don't apply invalid orders
+
+			if (order.status != Order.Status.PENDING)
+				continue;
+
+			// The unit might have been destroyed
+
+			if (hexes[order.coords].hp <= 0)
+			{
+				order.status = Order.Status.DESTROYED;
+				continue;
+			}
+
+			// Otherwise, go!
+
+			order.apply(this);
+		}
 	}
 }
