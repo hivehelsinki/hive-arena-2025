@@ -6,18 +6,10 @@ import terrain;
 import order;
 import utils;
 
-// const ubyte[Terrain] maxHP = [
-// 	Terrain.HIVE: 12,
-// 	Terrain.BEE: 2,
-// 	Terrain.FIELD: 120,
-// 	Terrain.WALL: 6,
-// 	Terrain.EMPTY: 0,
-// 	Terrain.ROCK: 0
-// ];
-
 const INIT_FIELD_FLOWERS = 120;
 const INIT_HIVE_HP = 12;
 const INIT_BEE_HP = 2;
+const INIT_WALL_HP = 6;
 
 class Unit
 {
