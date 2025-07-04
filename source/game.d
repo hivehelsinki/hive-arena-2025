@@ -84,6 +84,8 @@ class GameState
 		this.playerFlowers = new uint[numPlayers + 1];
 	}
 
+	// Should probably replace this with a hash table lookup
+
 	Unit find(string which)(Coords coords)
 	{
 		Unit[] arr;
@@ -95,6 +97,16 @@ class GameState
 
 		auto res = arr.find!(unit => unit.position == coords);
 		return res.empty ? null : res.front;
+	}
+
+	// This too
+
+	Unit findUnit(Coords coords)
+	{
+		if (auto unit = find!"bee"(coords)) return unit;
+		if (auto unit = find!"hive"(coords)) return unit;
+		if (auto unit = find!"wall"(coords)) return unit;
+		return null;
 	}
 
 	// void applyOrders(Order[] orders)

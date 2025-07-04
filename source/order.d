@@ -1,48 +1,50 @@
 import std.algorithm;
 
 import game;
-//
-// class Order
-// {
-// 	enum Status
-// 	{
-// 		PENDING,
-//
-// 		OUT_OF_BOUNDS,
-// 		TARGET_OUT_OF_BOUNDS,
-// 		BAD_UNIT,
-// 		BAD_PLAYER,
-//
-// 		BLOCKED,
-// 		DESTROYED,
-//
-// 		OK
-// 	}
-//
-// 	Status status;
-// 	ubyte player;
-// 	Coords coords;
-//
-// 	void validate(GameState state)
-// 	{
-// 		if (coords !in state.hexes)
-// 			status = Status.OUT_OF_BOUNDS;
-//
-// 		checkUnitType(state);
-//
-// 		if (state.hexes[coords].player != player)
-// 			status = Status.BAD_PLAYER;
-// 	}
-//
-// 	void checkUnitType(GameState state)
-// 	{
-// 		if (state.hexes[coords].kind != Terrain.BEE)
-// 			status = Status.BAD_UNIT;
-// 	}
-//
-// 	abstract void apply(GameState state);
-// }
-//
+import terrain;
+
+class Order
+{
+	enum Status
+	{
+		PENDING,
+
+		OUT_OF_BOUNDS,
+		TARGET_OUT_OF_BOUNDS,
+		BAD_UNIT,
+		BAD_PLAYER,
+
+		BLOCKED,
+		DESTROYED,
+
+		OK
+	}
+
+	Status status;
+	ubyte player;
+	Coords coords;
+
+	void validate(GameState state)
+	{
+		if (coords !in state.hexes)
+			status = Status.OUT_OF_BOUNDS;
+
+		checkUnitType(state);
+
+		if (auto unit = state.findUnit(coords))
+			if (unit.player != player)
+				status = Status.BAD_PLAYER;
+	}
+
+	void checkUnitType(GameState state)
+	{
+		if (!state.find!"bee"(coords))
+			status = Status.BAD_UNIT;
+	}
+
+	abstract void apply(GameState state);
+}
+
 // class TargetOrder : Order
 // {
 // 	Direction dir;
@@ -110,12 +112,12 @@ import game;
 // {
 //
 // }
-//
-// class SpawnOrder : Order
-// {
-// 	override void checkUnitType(GameState state)
-// 	{
-// 		if (state.hexes[coords].kind != Terrain.HIVE)
-// 			status = Status.BAD_UNIT;
-// 	}
-// }
+
+class SpawnOrder : Order
+{
+	override void checkUnitType(GameState state)
+	{
+		if (!state.find!"hive"(coords))
+			status = Status.BAD_UNIT;
+	}
+}
