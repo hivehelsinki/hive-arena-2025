@@ -14,7 +14,7 @@ const ubyte[HexKind] maxHP = [
 	HexKind.ROCK: 0
 ];
 
-struct Order
+class Order
 {
 	enum Kind
 	{
@@ -26,6 +26,23 @@ struct Order
 		SPAWN
 	}
 
+	enum Status
+	{
+		PENDING,
+
+		OUT_OF_BOUNDS,
+		TARGET_OUT_OF_BOUNDS,
+		BAD_UNIT,
+		ENNEMY_UNIT,
+
+		BLOCKED,
+		ATTACKED,
+		DESTROYED,
+
+		OK
+	}
+
+	Status status;
 	ubyte player;
 	Kind kind;
 	Coords coords;
@@ -60,15 +77,6 @@ struct Order
 	{
 		return !hasTarget;
 	}
-}
-
-enum OrderStatus
-{
-	OK,
-	OUT_OF_BOUNDS,
-	TARGET_OUT_OF_BOUNDS,
-	BAD_UNIT,
-	ENNEMY_UNIT
 }
 
 class GameState
@@ -114,31 +122,40 @@ class GameState
 		return state;
 	}
 
-	OrderStatus isValidOrder(Order order) const
+	void validateOrder(Order order) const
 	{
 		if (order.coords !in hexes)
-			return OrderStatus.OUT_OF_BOUNDS;
+		{
+			order.status = Order.Status.OUT_OF_BOUNDS;
+			return;
+		}
 
 		Hex from = hexes[order.coords];
 
-		if (order.isBeeOrder && from.kind != HexKind.BEE)
-			return OrderStatus.BAD_UNIT;
-
-		else if (order.isHiveOrder && from.kind != HexKind.HIVE)
-			return OrderStatus.BAD_UNIT;
+		if ((order.isBeeOrder && from.kind != HexKind.BEE) ||
+			(order.isHiveOrder && from.kind != HexKind.HIVE))
+		{
+			order.status = Order.Status.BAD_UNIT;
+			return;
+		}
 
 		if (from.player != order.player)
-			return OrderStatus.ENNEMY_UNIT;
+		{
+			order.status = Order.Status.ENNEMY_UNIT;
+			return;
+		}
 
 		if (order.hasTarget && order.coords.neighbour(order.dir) !in hexes)
-			return OrderStatus.TARGET_OUT_OF_BOUNDS;
-
-		return OrderStatus.OK;
+		{
+			order.status = Order.Status.TARGET_OUT_OF_BOUNDS;
+			return;
+		}
 	}
 
 	void applyOrders(Order[] orders)
 	{
-		auto valid = orders.filter!(a => isValidOrder(a) == OrderStatus.OK);
+		orders.each!(a => validateOrder(a));
+		auto valid = orders.filter!(a => a.status == Order.Status.PENDING);
 
 		// Attacks first
 
@@ -155,18 +172,27 @@ class GameState
 			}
 
 			wasAttacked[target] = true;
+			attack.status = Order.Status.OK;
 		}
 
 		// Invalidate orders to destroyed units
 
-		auto alive = valid.filter!(order => hexes[order.coords].hp != 0);
+		foreach(order; valid)
+			if (hexes[order.coords].hp == 0)
+				order.status = Order.Status.DESTROYED;
+
+		auto alive = valid.filter!(order => order.status != Order.Status.DESTROYED);
 
 		// Movement
 
 		solveMovements(alive.filter!(a => a.kind == Order.Kind.MOVE).array);
 
-		// Forage
 		// Spawns
+
+		// All the other orders fail if the unit was attacked
+
+		// Forage
+
 		// Hive starts
 		// Builds
 	}
