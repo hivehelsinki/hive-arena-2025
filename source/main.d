@@ -1,7 +1,8 @@
 import std.stdio;
 
-import map;
 import game;
+import map;
+import order;
 
 void main()
 {
@@ -9,4 +10,8 @@ void main()
 	auto game = GameState.spawn(map, 4);
 
 	write(game.hexes.mapToString);
+
+	auto foo = new MoveOrder();
+
+	game.applyOrders([foo]);
 }
