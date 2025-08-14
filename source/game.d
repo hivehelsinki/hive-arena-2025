@@ -38,7 +38,7 @@ class Unit : Entity
 {
 	const ubyte player;
 
-	this(Coords position, uint hp, ubyte player)
+	this(Coords position, int hp, ubyte player)
 	{
 		super(position, hp);
 		this.player = player;
