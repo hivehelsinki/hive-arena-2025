@@ -1,12 +1,12 @@
 {
-	"name": "arena",
+	"name": "cli",
 	"authors": [
 		"Noé Falzon"
 	],
 	"copyright": "Copyright © 2025, Noé Falzon",
+	"dependencies": {
+		"arena": "*"
+	},
 	"description": "AI agent writing competition for the Hive Helsinki school",
-	"license": "proprietary",
-	"subPackages": [
-		"cli"
-	]
+	"license": "proprietary"
 }

@@ -16,6 +16,6 @@ void main()
 
 	move1.apply();
 	move2.apply();
-	
+
 	writeln(game);
 }
