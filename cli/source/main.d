@@ -1,21 +1,25 @@
 import std.stdio;
 import std.algorithm;
 import std.range;
+import std.json;
 
 import game;
 import terrain;
 import order;
+import serialization;
 
 void main()
 {
 	auto map = loadMap("map.txt");
 	auto game = new GameState(map[0], map[1], 3);
 
-	auto move1 = new AttackOrder(game, player: 1, Coords(11, 3), Direction.SE);
-	auto move2 = new AttackOrder(game, player: 1, Coords(13, 3), Direction.NE);
+	auto move1 = new MoveOrder(game, player: 1, Coords(13, 3), Direction.W);
+	auto move2 = new ForageOrder(game, player: 1, Coords(13, 1));
 
-	move1.apply();
-	move2.apply();
+	game.processOrders([move1, move2]);
+	writeln(move2.status);
 
-	writeln(game);
+	auto lol = serialize(game);
+	auto foo = deserializeGameState(lol);
+	writeln(foo);
 }

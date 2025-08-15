@@ -126,6 +126,26 @@ class GameState
 		return staticMap.get(coords, Terrain.INVALID);
 	}
 
+	void processOrders(Order[] orders)
+	{
+		// TODO: randomize rounds between players
+
+		bool[Entity] acted;
+
+		foreach(order; orders)
+		{
+			auto unit = order.getUnit!Unit();
+			if (unit in acted)
+			{
+				order.status = Order.Status.UNIT_ALREADY_ACTED;
+				continue;
+			}
+
+			order.apply();
+			acted[unit] = true;
+		}
+	}
+
 	override string toString()
 	{
 		import std.format;
@@ -171,6 +191,8 @@ class GameState
 			}
 			res ~= '\n';
 		}
+
+		res ~= "Resources: " ~ playerFlowers[1 .. $].to!string;
 
 		return res;
 	}
