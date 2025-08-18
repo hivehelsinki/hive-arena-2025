@@ -134,10 +134,10 @@ class GameState
 		auto numRounds = orders.map!(arr => arr.length).maxElement;
 		Order[][] rounds;
 
-		foreach(round; 0 .. numRounds)
+		foreach (round; 0 .. numRounds)
 		{
 			Order[] roundOrders;
-			foreach(playerOrders; orders)
+			foreach (playerOrders; orders)
 			{
 				if (round < playerOrders.length)
 					roundOrders ~= playerOrders[round];
@@ -150,8 +150,8 @@ class GameState
 
 		bool[Entity] acted;
 
-		foreach(round; rounds)
-		foreach(order; round)
+		foreach (round; rounds)
+		foreach (order; round)
 		{
 			auto unit = order.getUnit!Unit();
 			if (unit in acted)

@@ -53,7 +53,7 @@ Tuple!(Entity,Coords) deserializeEntity(JSONValue j)
 JSONValue serialize(const Entity[Coords] entities)
 {
 	JSONValue[] j;
-	foreach(coords, entity; entities)
+	foreach (coords, entity; entities)
 		j ~= serialize(entity, coords);
 
 	return JSONValue(j);
@@ -62,7 +62,7 @@ JSONValue serialize(const Entity[Coords] entities)
 Entity[Coords] deserializeEntities(JSONValue j)
 {
 	Entity[Coords] entities;
-	foreach(entity; j.array)
+	foreach (entity; j.array)
 	{
 		auto res = deserializeEntity(entity);
 		entities[res[1]] = res[0];
@@ -74,7 +74,7 @@ JSONValue serialize(const Map map, const uint[Coords] fieldFlowers)
 {
 	JSONValue[] j;
 
-	foreach(coords, terrain; map)
+	foreach (coords, terrain; map)
 	{
 		JSONValue t;
 		t["row"] = coords.row;
@@ -95,7 +95,7 @@ Tuple!(Map, uint[Coords]) deserializeMap(JSONValue j)
 	Map map;
 	uint[Coords] flowers;
 
-	foreach(t; j.array)
+	foreach (t; j.array)
 	{
 		auto pos = Coords(t["row"].get!int, t["col"].get!int);
 		auto terrain = t["type"].get!string.to!Terrain;
@@ -131,7 +131,7 @@ GameState deserializeGameState(JSONValue j)
 	game.entities = deserializeEntities(j["entities"]);
 
 	game.playerFlowers = [0];
-	foreach(v; j["resources"].array)
+	foreach (v; j["resources"].array)
 		game.playerFlowers ~= v.get!uint;
 
 	return game;

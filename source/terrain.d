@@ -56,7 +56,7 @@ struct Coords
 		this.row = row;
 		this.col = col;
 	}
-	
+
 	static bool valid(int row, int col)
 	{
 		return (row + col) % 2 == 0;
@@ -98,7 +98,7 @@ private const charToSpawn = [
 
 char terrainToChar(Terrain kind)
 {
-	foreach(k, v; charToTerrain)
+	foreach (k, v; charToTerrain)
 	if (v == kind)
 		return k;
 
@@ -114,8 +114,8 @@ Tuple!(Map, Spawn[]) loadMap(string path)
 	Map map;
 	Spawn[] spawns;
 
-	foreach(int trow, string line; File(path, "r").lines)
-	foreach(tcol, char c; line)
+	foreach (int trow, string line; File(path, "r").lines)
+	foreach (tcol, char c; line)
 	{
 		if (!Coords.valid(trow, tcol.to!int / 2))
 			continue;
