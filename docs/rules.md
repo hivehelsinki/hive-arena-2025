@@ -78,12 +78,16 @@ The commands `move`, `build wall`, and `spawn bee` all take a direction as param
 
 The commands `build wall`, `build hive` and `spawn bee` all have a cost in resources: the player's resources are immediately reduced by that cost. If the player does not have enough resources to pay that cost, the command fails.
 
+### Influence
+
+At the end of each turn, each player's influence is updated. All cells within the field of view of a hive are under its influence. If a cell is in the field of view of multiple players, it belongs to the one with the closest hive, if any.
+
 ### Victory conditions
 
 At the end of the turn, the game state is checked for victory conditions. A player wins if:
 
 - they are the only player with units or buildings remaining.
-- OR: their hives' field of view covers (aka "influences") more than 50% of all the cells in the map.
+- OR: they influence more than 50% of all the cells in the map.
 
 If several players reach victory conditions on the same turn, tiebreakers are applied in this order:
 

@@ -2,6 +2,8 @@ import std.algorithm;
 import std.array;
 import std.conv;
 import std.random;
+import std.typecons;
+
 
 import terrain;
 import order;
@@ -14,6 +16,8 @@ const INIT_WALL_HP = 6;
 const BEE_COST = 12;
 const HIVE_COST = 24;
 const WALL_COST = 6;
+
+const HIVE_FIELD_OF_VIEW = 4;
 
 class Entity
 {
@@ -45,7 +49,9 @@ class GameState
 	uint[Coords] fieldFlowers;
 	Entity[Coords] entities;
 
-	private static const ubyte[][] playerMappings = [
+	ubyte[Coords] influence;
+
+	private static const byte[][] playerMappings = [
 		[],
 		[ 0, -1, -1, -1, -1, -1],
 		[ 0, -1, -1,  1, -1, -1],
@@ -93,6 +99,10 @@ class GameState
 		// And player resources
 
 		this.playerFlowers = new uint[numPlayers];
+
+		// Compute starting influence
+
+		updateInfluence();
 	}
 
 	Entity getEntityAt(Coords coords)
@@ -141,6 +151,46 @@ class GameState
 			order.apply();
 			acted[unit] = true;
 		}
+
+		updateInfluence();
+	}
+
+	void updateInfluence()
+	{
+		influence.clear();
+
+		auto hives = entities.byKeyValue
+			.filter!(pair => pair.value.type == Entity.Type.HIVE).array;
+
+		if (hives.length == 0)
+			return;
+
+		foreach(cell; staticMap.keys)
+		{
+			auto minDist = uint.max;
+			bool[ubyte] closestPlayers;
+
+			foreach(hive; hives)
+			{
+				auto dist = cell.distance(hive.key);
+				if (dist > HIVE_FIELD_OF_VIEW)
+					continue;
+
+				if (dist < minDist)
+				{
+					minDist = dist;
+					closestPlayers.clear();
+				}
+
+				if (dist <= minDist)
+				{
+					closestPlayers[hive.value.player] = true;
+				}
+			}
+
+			if (closestPlayers.keys.length == 1)
+				influence[cell] = closestPlayers.keys[0];
+		}
 	}
 
 	override string toString()
@@ -184,6 +234,11 @@ class GameState
 								c1 = 'W';
 								break;
 						}
+					}
+					else
+					{
+						if (coords in influence)
+							c2 = influence[coords].to!string[0];
 					}
 				}
 				res ~= format("%c%c  ", c1, c2);

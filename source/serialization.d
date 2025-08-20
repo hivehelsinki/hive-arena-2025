@@ -53,7 +53,7 @@ Entity[Coords] deserializeEntities(JSONValue j)
 	return entities;
 }
 
-JSONValue serialize(const Map map, const uint[Coords] fieldFlowers)
+JSONValue serialize(const Map map, const uint[Coords] fieldFlowers, const ubyte[Coords] influence = null)
 {
 	JSONValue[] j;
 
@@ -66,6 +66,9 @@ JSONValue serialize(const Map map, const uint[Coords] fieldFlowers)
 
 		if (terrain == Terrain.FIELD)
 			t["flowers"] = fieldFlowers[coords];
+
+		if (influence && coords in influence)
+			t["influence"] = influence[coords];
 
 		j ~= t;
 	}
@@ -92,12 +95,12 @@ Tuple!(Map, uint[Coords]) deserializeMap(JSONValue j)
 	return tuple(map, flowers);
 }
 
-JSONValue serialize(const GameState game)
+JSONValue serialize(const GameState game, bool includeInfluence = false)
 {
 	JSONValue j;
 
 	j["numPlayers"] = game.numPlayers;
-	j["map"] = serialize(game.staticMap, game.fieldFlowers);
+	j["map"] = serialize(game.staticMap, game.fieldFlowers, includeInfluence ? game.influence : null);
 	j["entities"] = serialize(game.entities);
 	j["resources"] = game.playerFlowers[1 .. $];
 
@@ -116,6 +119,8 @@ GameState deserializeGameState(JSONValue j)
 	game.playerFlowers = [0];
 	foreach (v; j["resources"].array)
 		game.playerFlowers ~= v.get!uint;
+
+	game.updateInfluence();
 
 	return game;
 }

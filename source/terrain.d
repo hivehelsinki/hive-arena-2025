@@ -2,6 +2,7 @@ import std.algorithm;
 import std.array;
 import std.conv;
 import std.typecons;
+import std.math;
 
 enum Terrain
 {
@@ -82,6 +83,13 @@ struct Coords
 	Coords[] neighbours() const
 	{
 		return directionToOffset.values.map!(offset => this + offset).array;
+	}
+
+	uint distance(const Coords b) const
+	{
+		auto dcol = abs(this.col - b.col);
+		auto drow = abs(this.row - b.row);
+		return drow + max(0, (dcol - drow) / 2);
 	}
 }
 
