@@ -35,6 +35,29 @@ local function indexMap(state)
 end
 
 local directions = {"NW", "NE", "E", "SE", "SW", "W"}
+local directionOffsets = {
+	E = {0, 2},
+	NE = {-1, 1},
+	NW = {-1, -1},
+	W = {0, -2},
+	SW = {1, -1},
+	SE = {1, 1}
+}
+
+local function neighbour(cell, dir, index)
+	local offset = directionOffsets[dir]
+	return index[(cell.row + offset[1]) .. ":" .. (cell.col + offset[2])]
+end
+
+local function findEnemyEntity(cell, index, player)
+
+	for _,dir in ipairs(directions) do
+		local n = neighbour(cell, dir, index)
+		if n and n.entity and n.entity.player ~= player then
+			return dir
+		end
+	end
+end
 
 local function makeOrders(state, player, index)
 
@@ -45,9 +68,13 @@ local function makeOrders(state, player, index)
 
 			local cell = index[v.row .. ":" .. v.col]
 			local terrain = cell.type
+			local enemyDir = findEnemyEntity(cell, index, player)
 
 			local type = "MOVE"
-			if terrain == "FIELD" then
+
+			if enemyDir then
+				type = "ATTACK"
+			elseif terrain == "FIELD" and cell.flowers and cell.flowers > 0 then
 				type = "FORAGE"
 			elseif cell.influence ~= player and state.resources[player + 1] >= 24 then
 				type = "BUILD_HIVE"
@@ -57,7 +84,7 @@ local function makeOrders(state, player, index)
 				row = v.row,
 				col = v.col,
 				type = type,
-				direction = directions[math.random(1, #directions)]
+				direction = enemyDir or directions[math.random(1, #directions)]
 			}
 
 			table.insert(orders, order)
@@ -77,6 +104,10 @@ local function makeOrders(state, player, index)
 		end
 	end
 
+	if #orders == 0 then	-- help lunajson know this is an array
+		orders[0] = 0
+	end
+
 	return orders
 end
 
@@ -91,8 +122,6 @@ local function runGame()
 		for p = 0, state.numPlayers - 1 do
 			table.insert(porders, makeOrders(state, p, index))
 		end
-
-		print("orders:", #porders)
 
 		local payload = {
 			gamestate = state,
