@@ -243,7 +243,6 @@ class GameState
 		if (maxInfluence <= staticMap.length / 2)
 			return;
 
-		Player[] winners;
 		foreach (Player p; 0 .. numPlayers)
 		if (influenceCounts[p] == maxInfluence)
 			winners ~= p;
