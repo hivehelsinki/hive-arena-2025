@@ -32,7 +32,6 @@ void main(string[] args)
 		auto game = new GameState(map[0], map[1], players);
 
 		writeln(serialize(game));
-		writeln(game.winners);
 	}
 	else if (toProcess.length != 0)
 	{
