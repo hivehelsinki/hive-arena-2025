@@ -59,15 +59,17 @@ void main(string[] args)
 		auto game = new GameState(map[0], map[1], players);
 
 		writeln(serialize(game));
+		return;
 	}
-	else if (toProcess.length != 0)
+
+	JSONValue data;
+
+	if (toProcess.length != 0)
 	{
 		import std.file;
 
 		auto txt = readText(toProcess);
-		auto data = parseJSON(txt);
-
-		process(data);
+		data = parseJSON(txt);
 	}
 	else
 	{
@@ -76,8 +78,17 @@ void main(string[] args)
 			input ~= line;
 
 		string txt = input.join;
-		auto data = parseJSON(txt);
+		data = parseJSON(txt);
+	}
 
+	try
+	{
 		process(data);
 	}
+	catch (Exception e)
+	{
+		stderr.writeln(e);
+		stderr.writeln(data);
+	}
+
 }
