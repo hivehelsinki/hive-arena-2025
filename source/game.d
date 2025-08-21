@@ -110,9 +110,10 @@ class GameState
 
 		this.playerResources = new uint[numPlayers];
 
-		// Compute starting influence
+		// Compute starting influence and the unlikely endgame
 
 		updateInfluence();
+		checkEndGame();
 	}
 
 	Entity getEntityAt(Coords coords)
@@ -130,39 +131,28 @@ class GameState
 		if (gameOver)
 			throw new Exception("Cannot process orders in a finished game");
 
-		// Randomize rounds between players
+		// Separate orders by round
 
-		auto numRounds = orders.map!(arr => arr.length).maxElement;
-		Order[][] rounds;
+		auto rounds = orders.transposed;
 
-		foreach (round; 0 .. numRounds)
-		{
-			Order[] roundOrders;
-			foreach (playerOrders; orders)
-			{
-				if (round < playerOrders.length)
-					roundOrders ~= playerOrders[round];
-			}
-
-			rounds ~= roundOrders.randomShuffle;
-		}
-
-		// Then apply them in order, checking that units are not ordered more than once
+		// Then apply them in random order within each round, checking that units are not ordered more than once
 
 		bool[Entity] acted;
 
 		foreach (round; rounds)
-		foreach (order; round)
 		{
-			auto unit = getEntityAt(order.coords);
-			if (unit in acted)
+			foreach (order; round.array.randomShuffle)
 			{
-				order.status = Order.Status.UNIT_ALREADY_ACTED;
-				continue;
-			}
+				auto unit = getEntityAt(order.coords);
+				if (unit in acted)
+				{
+					order.status = Order.Status.UNIT_ALREADY_ACTED;
+					continue;
+				}
 
-			order.apply();
-			acted[unit] = true;
+				order.apply();
+				acted[unit] = true;
+			}
 		}
 
 		turn++;
