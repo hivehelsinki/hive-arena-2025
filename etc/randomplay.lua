@@ -78,6 +78,8 @@ local function makeOrders(state, player, index)
 				type = "FORAGE"
 			elseif cell.influence ~= player and state.resources[player + 1] >= 24 then
 				type = "BUILD_HIVE"
+			elseif math.random() < 0.001 then
+				type = "BUILD_WALL"
 			end
 
 			local order = {
@@ -131,6 +133,7 @@ local function runGame()
 		local result = run("cli/arena_cli", payload)
 
 		state = result.gamestate
+		print(json.encode(result.processed))
 		printState(state)
 	end
 

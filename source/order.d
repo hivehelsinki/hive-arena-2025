@@ -195,6 +195,8 @@ class BuildHiveOrder : Order
 
 		auto hive = new Entity(Entity.Type.HIVE, hp: INIT_HIVE_HP, player: player);
 		state.entities[coords] = hive;
+
+		status = status.OK;
 	}
 }
 
@@ -214,5 +216,7 @@ class SpawnOrder : TargetOrder
 
 		auto bee = new Entity(Entity.Type.BEE, hp: INIT_BEE_HP, player: player);
 		state.entities[target] = bee;
+
+		status = status.OK;
 	}
 }
