@@ -90,7 +90,7 @@ local function makeOrders(state, player, index)
 			table.insert(orders, order)
 
 		elseif v.type == "HIVE" and v.player == player then
-			if state.resources[player + 1] >= 12 then
+			if state.resources[player + 1] >= 64 then
 
 				local order = {
 					row = v.row,
