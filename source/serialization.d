@@ -1,5 +1,7 @@
 import std.json;
 import std.typecons;
+import std.algorithm;
+import std.array;
 import std.conv;
 
 import terrain;
@@ -122,9 +124,7 @@ GameState deserializeGameState(JSONValue j)
 	auto game = new GameState(map[0], [], numPlayers);
 	game.mapResources = map[1];
 	game.entities = deserializeEntities(j["entities"]);
-
-	foreach (v; j["resources"].array)
-		game.playerResources ~= v.get!uint;
+	game.playerResources = j["resources"].array.map!(i => i.get!uint).array;
 
 	game.updateInfluence();
 
@@ -134,8 +134,7 @@ GameState deserializeGameState(JSONValue j)
 	game.gameOver = j["gameOver"].get!bool;
 
 	if (game.gameOver)
-		foreach (v; j["winners"].array)
-			game.winners ~= v.get!Player;
+		game.winners = j["winners"].array.map!(p => p.get!Player).array;
 
 	return game;
 }
