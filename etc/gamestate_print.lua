@@ -31,7 +31,7 @@ end
 
 local terrainToChar = {
 	EMPTY = ".",
-	ROCK = "S",
+	ROCK = "R",
 	FIELD = "F"
 }
 

@@ -17,7 +17,7 @@ The game is played on a hexagonal tiling of cells. Pre-written map files indicat
 
 Terrain can be of three types:
 
-- stone (unpassable and cannot be built in)
+- rock (unpassable and cannot be built in)
 - empty
 - flower fields, from which resources (flowers) can be foraged
 
