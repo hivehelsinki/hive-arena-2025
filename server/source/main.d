@@ -8,7 +8,16 @@ alias GameID = uint;
 
 class Game
 {
+	GameID id;
+	int numPlayers;
+	string map;
 
+	this(GameID id, int numPlayers, string map)
+	{
+		this.id = id;
+		this.numPlayers = numPlayers;
+		this.map = map;
+	}
 }
 
 class Server
@@ -18,7 +27,7 @@ class Server
 	this(ushort port)
 	{
 		auto router = new URLRouter;
-		router.get("/game", &createGame);
+		router.registerWebInterface(this);
 
 		auto settings = new HTTPServerSettings();
 		settings.port = port;
@@ -26,25 +35,15 @@ class Server
 		listenHTTP(settings, router);
 	}
 
-	void createGame(HTTPServerRequest req, HTTPServerResponse res)
+	Json getNewgame(int players, string map)
 	{
-		auto players = 0;
-		if ("players" in req.query)
-			players = req.query["players"].to!int;
-
-		if (players < 2 || players > 6)
-		{
-			res.writeBody("Invalid number of players");
-			res.statusCode = HTTPStatus.badRequest;
-			return;
-		}
-
 		GameID id;
 		do { id = uniform!GameID; } while (id in games);
 
-		games[id] = new Game;
+		auto game = new Game(id, players, map);
+		games[id] = game;
 
-		res.writeJsonBody(["id": id]);
+		return game.serializeToJson;
 	}
 }
 
