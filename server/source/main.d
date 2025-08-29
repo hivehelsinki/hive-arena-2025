@@ -214,6 +214,8 @@ class Server
 		}
 
 		auto player = game.addPlayer(name);
+		logInfo("Player %s joined game %d (#%d)", player.name, game.id, player.id);
+
 		return player.serializeToJson;
 	}
 }
