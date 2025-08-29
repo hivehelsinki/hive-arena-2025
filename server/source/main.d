@@ -221,6 +221,8 @@ class Server
 
 void main()
 {
+	setLogFormat(FileLogger.Format.threadTime, FileLogger.Format.threadTime);
+
 	auto server = new Server(8000);
 	runApplication();
 
