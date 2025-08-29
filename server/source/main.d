@@ -191,6 +191,12 @@ class Server
 		)).array.serializeToJson;
 	}
 
+	struct JoinResponse
+	{
+		PlayerID id;
+		Token token;
+	}
+
 	Json getJoin(GameID id, string name)
 	{
 		if (id !in games)
@@ -215,7 +221,7 @@ class Server
 		auto player = game.addPlayer(name);
 		logInfo("Player %s joined game %d (#%d)", player.name, game.id, player.id);
 
-		return player.serializeToJson;
+		return JoinResponse(player.id, player.token).serializeToJson;
 	}
 }
 
