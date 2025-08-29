@@ -1,21 +1,20 @@
 local http = require "http.request"
 local json = require "lunajson"
 
-local host = "localhost:8000"
+local host = "http://localhost:8000/"
 
-local function req(url, ...)
-	local headers, stream = http.new_from_uri(string.format(url, ...)):go()
+local function req(route, ...)
+	local headers, stream = http.new_from_uri(string.format(host .. route, ...)):go()
 	return json.decode(stream:get_body_as_string())
 end
 
-
 local function start_game(players, map)
 
-	local game = req("http://%s/newgame?players=%d&map=%s", host, players, map)
+	local game = req("newgame?players=%d&map=%s", players, map)
 	game.players = {}
 
 	for i = 1, game.numPlayers do
-		local player = req("http://%s/join?id=%d&name=%s", host, game.id, "coolplayer" .. math.random(1000000))
+		local player = req("join?id=%d&name=%s", game.id, "coolplayer" .. math.random(1000000))
 		table.insert(game.players, player)
 	end
 
