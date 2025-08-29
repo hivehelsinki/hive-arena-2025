@@ -21,7 +21,8 @@ alias Token = string;
 
 class Player
 {
-	PlayerID player;
+	PlayerID id;
+	string name;
 	Token token;
 }
 
@@ -68,14 +69,15 @@ class Game
 		state = new GameState(map, numPlayers);
 	}
 
-	Player addPlayer()
+	Player addPlayer(string name)
 	{
 		if (full)
 			throw new Exception("Game is full");
 
 		auto player = new Player();
-		player.player = cast(PlayerID) players.length;
-		player.token = playerTokens[player.player];
+		player.id = cast(PlayerID) players.length;
+		player.name = name;
+		player.token = playerTokens[player.id];
 
 		players ~= player;
 		return player;
@@ -148,6 +150,10 @@ class Server
 		Game game = new Game(id, players, maps[map]);
 		games[id] = game;
 
+		logInfo(format("Created game %d (%s, %d players)", id, map, players));
+
+		setTimer(5.minutes, () => removeIfNotStarted(id));
+
 		return NewGameResponse(
 			id: game.id,
 			numPlayers: game.numPlayers,
@@ -155,6 +161,15 @@ class Server
 			createdDate: game.createdDate,
 			adminToken: game.adminToken
 		).serializeToJson;
+	}
+
+	private void removeIfNotStarted(GameID id)
+	{
+		if (!games[id].full)
+		{
+			games.remove(id);
+			logInfo(format("Removed game %d because of timeout", id));
+		}
 	}
 
 	struct StatusResponse
@@ -177,12 +192,18 @@ class Server
 		)).array.serializeToJson;
 	}
 
-	Json getJoin(GameID id)
+	Json getJoin(GameID id, string name)
 	{
 		if (id !in games)
 		{
 			status(HTTPStatus.badRequest);
 			return Json("Invalid game id: " ~ id.to!string);
+		}
+
+		if (name == "")
+		{
+			status(HTTPStatus.badRequest);
+			return Json("Invalid name");
 		}
 
 		auto game = games[id];
@@ -192,7 +213,7 @@ class Server
 			return Json("Game is full");
 		}
 
-		auto player = game.addPlayer();
+		auto player = game.addPlayer(name);
 		return player.serializeToJson;
 	}
 }
