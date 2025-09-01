@@ -8,6 +8,7 @@ import std.file;
 import std.regex;
 import std.algorithm;
 import std.array;
+import std.typecons;
 
 import vibe.vibe;
 
@@ -19,6 +20,61 @@ const MAP_DIR = "maps";
 alias GameID = uint;
 alias Token = string;
 
+struct GameResponse
+{
+	struct Cell
+	{
+		uint row, col;
+		@byName Terrain terrain;
+
+		@embedNullable Nullable!uint resources;
+		@embedNullable Nullable!PlayerID influence;
+		@embedNullable Nullable!Entity entity;
+	}
+
+	uint turn;
+
+	Cell[] map;
+	uint[] playerResources;
+	uint lastInfluenceChange;
+
+	PlayerID[] winners;
+	bool gameOver;
+
+	this(const GameState state, Nullable!PlayerID player = Nullable!PlayerID.init)
+	{
+		turn = state.turn;
+		playerResources = state.playerResources.dup;
+		lastInfluenceChange = state.lastInfluenceChange;
+
+		foreach(coords, terrain; state.staticMap)
+		{
+			if (!player.isNull && !state.isVisibleBy(coords, player.get))
+				continue;
+
+			auto cell = Cell(
+				coords.row,
+				coords.col,
+				terrain
+			);
+
+			if (terrain == Terrain.FIELD)
+				cell.resources = state.mapResources[coords];
+
+			if (coords in state.influence)
+				cell.influence = state.influence[coords];
+
+			if (coords in state.entities)
+				cell.entity = cast(Entity) state.entities[coords];
+
+			map ~= cell;
+		}
+
+		winners = state.winners.dup;
+		gameOver = state.gameOver;
+	}
+}
+
 class Player
 {
 	PlayerID id;
@@ -29,7 +85,6 @@ class Player
 class Game
 {
 	GameID id;
-	PlayerID numPlayers;
 	string map;
 
 	SysTime createdDate;
@@ -57,7 +112,6 @@ class Game
 	this(GameID id, int numPlayers, MapData map)
 	{
 		this.id = id;
-		this.numPlayers = numPlayers;
 		this.map = map.name;
 
 		createdDate = Clock.currTime;
@@ -85,7 +139,18 @@ class Game
 
 	bool full()
 	{
-		return players.length == numPlayers;
+		return players.length == state.numPlayers;
+	}
+
+	Json fullState()
+	{
+		return GameResponse(state).serializeToJson;
+	}
+
+	Json playerView(Token token)
+	{
+		auto player = cast(PlayerID) playerTokens.countUntil(token);
+		return GameResponse(state, nullable(player)).serializeToJson;
 	}
 }
 
@@ -155,7 +220,7 @@ class Server
 
 		return NewGameResponse(
 			id: game.id,
-			numPlayers: game.numPlayers,
+			numPlayers: game.state.numPlayers,
 			map: game.map,
 			createdDate: game.createdDate,
 			adminToken: game.adminToken
@@ -184,7 +249,7 @@ class Server
 	{
 		return games.values.map!(game => StatusResponse(
 			id: game.id,
-			numPlayers: game.numPlayers,
+			numPlayers: game.state.numPlayers,
 			playersJoined: cast(PlayerID) game.players.length,
 			map: game.map,
 			createdDate: game.createdDate
@@ -222,6 +287,31 @@ class Server
 		logInfo("Player %s joined game %d (#%d)", player.name, game.id, player.id);
 
 		return JoinResponse(player.id, player.token).serializeToJson;
+	}
+
+	Json getGame(GameID id, Token token)
+	{
+		if (id !in games)
+		{
+			status(HTTPStatus.badRequest);
+			return Json("Invalid game id: " ~ id.to!string);
+		}
+
+		auto game = games[id];
+		if (!game.full)
+		{
+			status(HTTPStatus.badRequest);
+			return Json("Game has not started");
+		}
+
+		if (token == game.adminToken)
+			return game.fullState;
+
+		if (game.playerTokens.canFind(token))
+			return game.playerView(token);
+
+		status(HTTPStatus.badRequest);
+		return Json("Invalid token");
 	}
 }
 

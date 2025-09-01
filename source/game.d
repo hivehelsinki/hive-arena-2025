@@ -24,6 +24,8 @@ alias PlayerID = uint;
 
 class Entity
 {
+	import vibe.data.serialization;
+	
 	enum Type
 	{
 		WALL,
@@ -31,7 +33,7 @@ class Entity
 		BEE
 	}
 
-	Type type;
+	@byName Type type;
 	int hp;
 	PlayerID player;
 
@@ -83,7 +85,7 @@ class GameState
 	this(const Map map, const Spawn[] spawns, PlayerID numPlayers)
 	{
 		this.numPlayers = numPlayers;
-		this.staticMap = staticMap;
+		this.staticMap = map;
 
 		// Create units for existing players
 
@@ -255,5 +257,13 @@ class GameState
 			winners ~= p;
 
 		gameOver = true;
+	}
+	
+	bool isVisibleBy(Coords coords, PlayerID player) const
+	{
+		return entities
+			.byKeyValue
+			.filter!(e => e.value.player == player)
+			.any!(e => e.key.distance(coords) <= HIVE_FIELD_OF_VIEW);
 	}
 }
