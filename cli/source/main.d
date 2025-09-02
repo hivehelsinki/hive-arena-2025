@@ -17,7 +17,7 @@ void process(JSONValue data)
 		throw new Exception("Player count mismatch");
 
 	Order[][] orders;
-	foreach(Player p; 0 .. game.numPlayers)
+	foreach (Player p; 0 .. game.numPlayers)
 		orders ~= data["orders"][p].array.map!(o => deserializeOrder(o, p, game)).array;
 
 	auto processed = game.processOrders(orders);
@@ -74,7 +74,7 @@ void main(string[] args)
 	else
 	{
 		string[] input;
-		foreach(string line; lines(stdin))
+		foreach (string line; lines(stdin))
 			input ~= line;
 
 		string txt = input.join;

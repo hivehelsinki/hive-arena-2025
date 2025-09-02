@@ -200,7 +200,7 @@ class GameState
 		auto hives = entities
 			.filter!(pair => pair.entity.type == Entity.Type.HIVE).array;
 
-		foreach(coords, hex; hexes)
+		foreach (coords, hex; hexes)
 		{
 			auto minDist = uint.max;
 			bool[PlayerID] closestPlayers;
@@ -250,7 +250,7 @@ class GameState
 		auto influenceCounts = new uint[numPlayers];
 		auto hiveCounts = new uint[numPlayers];
 
-		foreach(coords, hex; hexes)
+		foreach (coords, hex; hexes)
 		{
 			if (!hex.influence.isNull)
 				influenceCounts[hex.influence.get]++;
@@ -275,8 +275,8 @@ class GameState
 			return;
 
 		foreach (PlayerID p; 0 .. numPlayers)
-		if (influenceCounts[p] == maxInfluence)
-			winners ~= p;
+			if (influenceCounts[p] == maxInfluence)
+				winners ~= p;
 
 		gameOver = true;
 	}
@@ -295,9 +295,9 @@ class GameState
 		view.numPlayers = numPlayers;
 	 	view.turn = turn;
 		
-		foreach(coords, hex; hexes)
-		if (isVisibleBy(coords, player))
-			view.hexes[coords] = hex;
+		foreach (coords, hex; hexes)
+			if (isVisibleBy(coords, player))
+				view.hexes[coords] = hex;
 		
 		view.playerResources = [playerResources[player]];
 		view.lastInfluenceChange = lastInfluenceChange;
