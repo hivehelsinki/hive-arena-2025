@@ -91,6 +91,18 @@ struct Coords
 		auto drow = abs(this.row - b.row);
 		return drow + max(0, (dcol - drow) / 2);
 	}
+
+	string toString() const @safe
+	{
+		import std.format;
+		return format("%d:%d", row, col);
+	}
+
+	static Coords fromString(string s)
+	{
+		auto parts = s.split(":");
+		return Coords(parts[0].to!int, parts[1].to!int);
+	}
 }
 
 private const charToTerrain = [
