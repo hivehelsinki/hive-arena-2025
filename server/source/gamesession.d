@@ -33,6 +33,7 @@ class GameSession
 	GameState state;
 	Order[][] pendingOrders;
 	bool[] playedTurn;
+	bool[] pulledState;
 
 	Order[][] orderHistory;
 
@@ -93,6 +94,7 @@ class GameSession
 	{
 		pendingOrders = new Order[][state.numPlayers];
 		playedTurn = new bool[state.numPlayers];
+		pulledState = new bool[state.numPlayers];
 
 		setTimer(TURN_TIMEOUT, () => timeoutTurn(state.turn));
 	}

@@ -166,11 +166,21 @@ class Server
 		if (token == game.adminToken)
 			return game.fullState;
 
-		if (auto player = game.getPlayer(token))
-			return game.playerView(player);
+		auto player = game.getPlayer(token);
+		if (!player)
+		{
+			status(HTTPStatus.forbidden);
+			return Json("Invalid token");
+		}
 
-		status(HTTPStatus.forbidden);
-		return Json("Invalid token");
+		if (game.pulledState[player.id])
+		{
+			status(HTTPStatus.tooManyRequests);
+			return Json("State already pulled for this turn");
+		}
+
+		game.pulledState[player.id] = true;
+		return game.playerView(player);
 	}
 
 	Json postOrders(GameID id, Token token)
@@ -193,6 +203,12 @@ class Server
 		{
 			status(HTTPStatus.forbidden);
 			return Json("Invalid token");
+		}
+
+		if (game.playedTurn[player.id])
+		{
+			status(HTTPStatus.tooManyRequests);
+			return Json("Orders already sent for this turn");
 		}
 
 		auto orders = deserializeJson!(Order[])(request.json);
