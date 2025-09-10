@@ -130,9 +130,6 @@ class GameSession
 
 		pendingOrders[id] = orders;
 		playedTurn[id] = true;
-
-		if (playedTurn.all)
-			processTurn();
 	}
 
 	private void timeoutTurn(uint turn)
@@ -141,7 +138,7 @@ class GameSession
 			processTurn();
 	}
 
-	private void processTurn()
+	void processTurn()
 	{
 		if (state.gameOver)
 			return;

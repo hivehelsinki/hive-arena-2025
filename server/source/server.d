@@ -244,8 +244,11 @@ class Server
 
 		auto orders = deserializeJson!(Order[])(request.json);
 		game.setOrders(player.id, orders);
-
 		logInfo("Player %s posted orders in game %d", player.name, id);
+
+		if (game.playedTurn.all)
+			game.processTurn();
+
 		return Json("OK");
 	}
 
