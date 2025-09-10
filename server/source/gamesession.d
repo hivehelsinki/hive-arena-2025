@@ -64,7 +64,6 @@ class GameSession
 		playerTokens = tokens[1 .. $];
 
 		state = new GameState(map, numPlayers);
-		startTurn();
 	}
 
 	Player getPlayer(Token token)
@@ -84,6 +83,13 @@ class GameSession
 		player.token = playerTokens[player.id];
 
 		players ~= player;
+
+		if (full)
+		{
+			logInfo("Game %d started", id);
+			startNextTurn();
+		}
+
 		return player;
 	}
 
@@ -92,13 +98,26 @@ class GameSession
 		return players.length == state.numPlayers;
 	}
 
-	private void startTurn()
+	struct Message
+	{
+		uint turn;
+		bool gameOver;
+	}
+
+	private void startNextTurn()
 	{
 		pendingOrders = new Order[][state.numPlayers];
 		playedTurn = new bool[state.numPlayers];
 		pulledState = new bool[state.numPlayers];
 
-		setTimer(TURN_TIMEOUT, () => timeoutTurn(state.turn));
+		auto message = Message(state.turn, state.gameOver).serializeToJsonString;
+
+		foreach (socket; sockets)
+			if (socket.connected)
+				socket.send(message);
+
+		if (!state.gameOver)
+			setTimer(TURN_TIMEOUT, () => timeoutTurn(state.turn));
 	}
 
 	Json fullState()
@@ -128,12 +147,6 @@ class GameSession
 			processTurn();
 	}
 
-	struct Message
-	{
-		uint turn;
-		bool gameOver;
-	}
-
 	private void processTurn()
 	{
 		if (state.gameOver)
@@ -144,13 +157,6 @@ class GameSession
 		auto results = state.processOrders(pendingOrders);
 		orderHistory ~= results;
 
-		auto message = Message(state.turn, state.gameOver).serializeToJsonString;
-
-		foreach (socket; sockets)
-			if (socket.connected)
-				socket.send(message);
-
-		if (!state.gameOver)
-			startTurn();
+		startNextTurn();
 	}
 }
