@@ -3,6 +3,7 @@ import std.array;
 import std.file;
 import std.random;
 import std.regex;
+import std.stdio;
 
 import vibe.vibe;
 
@@ -11,6 +12,7 @@ import terrain;
 import gamesession;
 
 const MAP_DIR = "maps";
+const HISTORY_DIR = "history";
 const GAME_START_TIMEOUT = 5.minutes;
 
 class Server
@@ -22,13 +24,22 @@ class Server
 	{
 		loadMaps();
 
+		auto fsettings = new HTTPFileServerSettings;
+		fsettings.serverPathPrefix = "/history";
+
 		auto router = new URLRouter;
 		router.registerWebInterface(this);
+		router.get("/history/*", serveStaticFiles(HISTORY_DIR ~ "/", fsettings));
 
 		auto settings = new HTTPServerSettings();
 		settings.port = port;
 
 		listenHTTP(settings, router);
+
+		setTimer(GAME_START_TIMEOUT, &removeFinishedGames, periodic: true);
+
+		if (!exists(HISTORY_DIR))
+			mkdir(HISTORY_DIR);
 	}
 
 	private void loadMaps()
@@ -43,6 +54,17 @@ class Server
 		}
 
 		logInfo("Loaded maps: " ~ maps.keys.join(", "));
+	}
+
+	private void removeFinishedGames()
+	{
+		auto finished = games.values.filter!(g => g.state.gameOver).map!(g => g.id).array;
+		foreach(id; finished)
+		{
+			persistGame(games[id]);
+			games.remove(id);
+			logInfo("Removed finished game %d", id);
+		}
 	}
 
 	struct NewGameResponse
@@ -88,7 +110,7 @@ class Server
 
 	private void removeIfNotStarted(GameID id)
 	{
-		if (!games[id].full)
+		if (id in games && !games[id].full)
 		{
 			games.remove(id);
 			logInfo("Removed game %d because of timeout", id);
@@ -216,6 +238,38 @@ class Server
 
 		logInfo("Player %s posted orders in game %d", player.name, id);
 		return Json("OK");
+	}
+
+	struct FinishedGame
+	{
+		GameID id;
+		string map;
+		SysTime createdDate;
+		GameState state;
+		Order[][] orderHistory;
+	}
+
+	private void persistGame(GameSession game)
+	{
+		assert(game.state.gameOver);
+
+		auto path = format("%s/%s-%d-%s.json", HISTORY_DIR, game.createdDate.toISOString, game.id, game.map);
+
+		FinishedGame(
+			game.id,
+			game.map,
+			game.createdDate,
+			game.state,
+			game.orderHistory
+		).serializeToJsonString.toFile(path);
+	}
+
+	Json getHistory()
+	{
+		return dirEntries(HISTORY_DIR, SpanMode.shallow)
+			.map!(e => e.name)
+			.array
+			.serializeToJson;
 	}
 }
 

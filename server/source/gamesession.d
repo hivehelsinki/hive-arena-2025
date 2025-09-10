@@ -136,6 +136,7 @@ class GameSession
 		auto results = state.processOrders(pendingOrders);
 		orderHistory ~= results;
 
-		startTurn();
+		if (!state.gameOver)
+			startTurn();
 	}
 }
