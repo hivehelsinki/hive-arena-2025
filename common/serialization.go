@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -52,4 +53,33 @@ func (t EntityType) String() string {
 
 func (t EntityType) MarshalText() (text []byte, err error) {
 	return []byte(t.String()), nil
+}
+
+var orderTypeStrings = []string{
+	"MOVE",
+	"ATTACK",
+	"BUILD_WALL",
+	"BUILD_HIVE",
+	"FORAGE",
+	"SPAWN",
+}
+
+func (t OrderType) String() string {
+	return orderTypeStrings[t]
+}
+
+func (t OrderType) MarshalText() (text []byte, err error) {
+	return []byte(t.String()), nil
+}
+
+func (t *OrderType) UnmarshalText(b []byte) error {
+	str := string(b)
+	index := slices.Index(orderTypeStrings, str)
+
+	if index >= 0 {
+		*t = OrderType(index)
+		return nil
+	}
+
+	return fmt.Errorf("Could not unmarshal OrderType: %s", str)
 }
