@@ -2,12 +2,17 @@ package main
 
 import (
 	"fmt"
+	"encoding/json"
 	"hive-arena/common"
 )
 
 func main() {
 
-	foo, err := common.LoadMap("maps/balanced.txt")
+	mapData, _ := common.LoadMap("maps/balanced.txt")
 
-	fmt.Printf("%+v \n %v", foo, err)
+	gs := common.NewGameState(mapData, 4)
+
+	txt, err := json.Marshal(gs)
+	fmt.Printf("%+v\n", gs)
+	fmt.Println(string(txt), err)
 }

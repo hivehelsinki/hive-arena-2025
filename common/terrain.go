@@ -16,7 +16,7 @@ const (
 	FIELD
 )
 
-func isWalkable(t Terrain) bool {
+func (t Terrain) IsWalkable() bool {
 	return t == EMPTY || t == FIELD
 }
 
@@ -74,16 +74,8 @@ var directionToOffset = map[Direction]Coords{
 	SE: {1, 1},
 }
 
-//go:generate stringer -type SpawnKind
-type SpawnKind int
-
-const (
-	HIVE SpawnKind = iota
-	BEE
-)
-
 type Spawn struct {
-	Kind   SpawnKind
+	Kind   EntityType
 	Player int
 	Coords Coords
 }
@@ -100,7 +92,7 @@ var charToTerrain = map[rune]Terrain{
 	'R': ROCK,
 }
 
-var charToSpawn = map[rune]SpawnKind{
+var charToSpawn = map[rune]EntityType{
 	'H': HIVE,
 	'B': BEE,
 }

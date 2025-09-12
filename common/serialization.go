@@ -26,14 +26,22 @@ func FromString(s string) (Coords, error) {
 	return Coords{Row: row, Col: col}, nil
 }
 
+func (c Coords) MarshalText() (text []byte, err error) {
+	return []byte(c.String()), nil
+}
+
 func (t Terrain) String() string {
 	return []string{"invalid", "empty", "rock", "field"}[t]
+}
+
+func (t Terrain) MarshalText() (text []byte, err error) {
+	return []byte(t.String()), nil
 }
 
 func (d Direction) String() string {
 	return []string{"E", "SE", "SW", "W", "NW", "NE"}[d]
 }
 
-func (k SpawnKind) String() string {
-	return []string{"hive", "bee"}[k]
+func (d Direction) MarshalText() (text []byte, err error) {
+	return []byte(d.String()), nil
 }
