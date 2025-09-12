@@ -2,10 +2,10 @@ package common
 
 import (
 	"fmt"
+	"iter"
 	"math"
 	"math/rand"
 	"slices"
-	"iter"
 )
 
 const (
@@ -23,9 +23,9 @@ const (
 )
 
 type Entity struct {
-	Type   EntityType	`json:"type"`
-	HP     int			`json:"hp"`
-	Player int		`json:"player"`
+	Type   EntityType `json:"type"`
+	HP     int        `json:"hp"`
+	Player int        `json:"player"`
 }
 
 type EntityType int
@@ -37,10 +37,10 @@ const (
 )
 
 type Hex struct {
-	Terrain   Terrain	`json:"terrain"`
-	Resources uint		`json:"resources,omitempty"`
-	Influence int	`json:"influence"`
-	Entity    *Entity	`json:"entity,omitempty"`
+	Terrain   Terrain `json:"terrain"`
+	Resources uint    `json:"resources,omitempty"`
+	Influence int     `json:"influence"`
+	Entity    *Entity `json:"entity,omitempty"`
 }
 
 type Order struct {
@@ -88,14 +88,14 @@ func (o *Order) Target() Coords {
 }
 
 type GameState struct {
-	NumPlayers          int		`json:"numPlayers"`
-	Turn                uint			`json:"turn"`
-	Hexes               map[Coords]*Hex	`json:"hexes"`
-	PlayerResources     []uint			`json:"playerResources"`
-	LastInfluenceChange uint			`json:"lastInfluenceChange"`
+	NumPlayers          int             `json:"numPlayers"`
+	Turn                uint            `json:"turn"`
+	Hexes               map[Coords]*Hex `json:"hexes"`
+	PlayerResources     []uint          `json:"playerResources"`
+	LastInfluenceChange uint            `json:"lastInfluenceChange"`
 
-	Winners  []int					`json:"winners,omitempty"`
-	GameOver bool						`json:"gameOver"`
+	Winners  []int `json:"winners,omitempty"`
+	GameOver bool  `json:"gameOver"`
 }
 
 var playerMappings = [][]int{
@@ -161,75 +161,66 @@ func (gs *GameState) TerrainAt(coords Coords) Terrain {
 	return hex.Terrain
 }
 
-func (gs *GameState) Entities() []struct {
-	Coords Coords
-	Entity *Entity
-} {
-	var entities []struct {
-		Coords Coords
-		Entity *Entity
-	}
-	for coords, hex := range gs.Hexes {
-		if hex.Entity != nil {
-			entities = append(entities, struct {
-				Coords Coords
-				Entity *Entity
-			}{coords, hex.Entity})
-		}
-	}
-	return entities
-}
-
-// ProcessOrders processes a set of orders for all players.
-func (gs *GameState) ProcessOrders(orders [][]Order) ([]Order, error) {
+func (gs *GameState) ProcessOrders(orders [][]*Order) ([]*Order, error) {
 	if gs.GameOver {
 		return nil, fmt.Errorf("cannot process orders in a finished game")
 	}
 
-	for id := int(0); id < gs.NumPlayers; id++ {
-		for i := range orders[id] {
-			orders[id][i].Player = id
+	// Fill in player ids
+
+	for player, playerOrders := range orders {
+		for _, order := range playerOrders {
+			order.Player = player
 		}
 	}
 
-	var rounds [][]Order
-	if len(orders) > 0 {
-		maxLen := 0
-		for _, playerOrders := range orders {
-			if len(playerOrders) > maxLen {
-				maxLen = len(playerOrders)
-			}
-		}
+	// Count how many rounds there will be (the length of the longer player orders list)
 
-		rounds = make([][]Order, maxLen)
-		for i := 0; i < maxLen; i++ {
-			for j := range orders {
-				if i < len(orders[j]) {
-					rounds[i] = append(rounds[i], orders[j][i])
-				}
-			}
+	numRounds := 0
+	for _, playerOrders := range orders {
+		if len(playerOrders) > numRounds {
+			numRounds = len(playerOrders)
 		}
 	}
 
 	acted := make(map[*Entity]bool)
-	var processed []Order
+	var processed []*Order
 
-	for _, round := range rounds {
-		rand.Shuffle(len(round), func(i, j int) {
-			round[i], round[j] = round[j], round[i]
+	// Process round by round
+
+	for roundNumber := range numRounds {
+		roundOrders := []*Order{}
+
+		// Gather orders for this round
+
+		for _, playerOrders := range orders {
+			if roundNumber < len(playerOrders) {
+				roundOrders = append(roundOrders, playerOrders[roundNumber])
+			}
+		}
+
+		// Shuffle them
+
+		rand.Shuffle(len(roundOrders), func(i, j int) {
+			roundOrders[i], roundOrders[j] = roundOrders[j], roundOrders[i]
 		})
 
-		for i := range round {
-			order := &round[i]
+		// Apply them
+
+		for _, order := range roundOrders {
+
 			unit := gs.EntityAt(order.Coords)
-			if unit != nil {
-				if acted[unit] {
-					order.Status = UNIT_ALREADY_ACTED
-					continue
-				}
+
+			if unit == nil {
+				order.Status = INVALID_UNIT
+				continue
+			} else if acted[unit] {
+				order.Status = UNIT_ALREADY_ACTED
+				continue
+			} else {
 				gs.applyOrder(order)
 				acted[unit] = true
-				processed = append(processed, *order)
+				processed = append(processed, order)
 			}
 		}
 	}
@@ -434,7 +425,7 @@ func (gs *GameState) updateInfluence() {
 			hex.Influence = -1
 		}
 
-		if (hex.Influence != previousInfluence) {
+		if hex.Influence != previousInfluence {
 			gs.LastInfluenceChange = gs.Turn
 		}
 	}
@@ -444,7 +435,7 @@ func (gs *GameState) checkEndGame() {
 
 	// No influence change in a while
 
-	if gs.Turn - gs.LastInfluenceChange > INFLUENCE_TIMEOUT {
+	if gs.Turn-gs.LastInfluenceChange > INFLUENCE_TIMEOUT {
 		gs.GameOver = true
 		return
 	}
@@ -486,7 +477,7 @@ func (gs *GameState) checkEndGame() {
 	// Check if anyone has more than half the map influenced
 
 	maxInfluence := slices.Max(influenceCounts)
-	if maxInfluence <= len(gs.Hexes) / 2 {
+	if maxInfluence <= len(gs.Hexes)/2 {
 		return
 	}
 
