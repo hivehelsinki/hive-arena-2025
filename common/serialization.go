@@ -31,7 +31,7 @@ func (c Coords) MarshalText() (text []byte, err error) {
 }
 
 func (t Terrain) String() string {
-	return []string{"invalid", "empty", "rock", "field"}[t]
+	return []string{"INVALID", "EMPTY", "ROCK", "FIELD"}[t]
 }
 
 func (t Terrain) MarshalText() (text []byte, err error) {
@@ -44,4 +44,12 @@ func (d Direction) String() string {
 
 func (d Direction) MarshalText() (text []byte, err error) {
 	return []byte(d.String()), nil
+}
+
+func (t EntityType) String() string {
+	return []string{"WALL", "HIVE", "BEE"}[t]
+}
+
+func (t EntityType) MarshalText() (text []byte, err error) {
+	return []byte(t.String()), nil
 }

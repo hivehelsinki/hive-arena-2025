@@ -12,7 +12,6 @@ func main() {
 
 	gs := common.NewGameState(mapData, 4)
 
-	txt, err := json.Marshal(gs)
-	fmt.Printf("%+v\n", gs)
-	fmt.Println(string(txt), err)
+	txt, _ := json.Marshal(gs)
+	fmt.Println(string(txt))
 }
