@@ -153,14 +153,6 @@ func (gs *GameState) EntityAt(coords Coords) *Entity {
 	return hex.Entity
 }
 
-func (gs *GameState) TerrainAt(coords Coords) Terrain {
-	hex, ok := gs.Hexes[coords]
-	if !ok {
-		return INVALID
-	}
-	return hex.Terrain
-}
-
 func (gs *GameState) ProcessOrders(orders [][]*Order) ([]*Order, error) {
 	if gs.GameOver {
 		return nil, fmt.Errorf("cannot process orders in a finished game")
@@ -259,10 +251,9 @@ func (gs *GameState) getUnit(order *Order) *Entity {
 }
 
 func (gs *GameState) targetIsBlocked(order *Order) bool {
-	targetTerrain := gs.TerrainAt(order.Target())
-	entity := gs.EntityAt(order.Target())
 
-	if !targetTerrain.IsWalkable() || entity != nil {
+	hex := gs.Hexes[order.Target()]
+	if hex == nil || !hex.Terrain.IsWalkable() || hex.Entity != nil {
 		order.Status = BLOCKED
 		return true
 	}
@@ -375,11 +366,6 @@ func (gs *GameState) applySpawnOrder(order *Order) {
 	gs.Hexes[order.Target()].Entity = bee
 
 	order.Status = OK
-}
-
-type CoordsEntity struct {
-	Coords Coords
-	Entity *Entity
 }
 
 func (gs *GameState) Hives() iter.Seq2[Coords, *Entity] {
