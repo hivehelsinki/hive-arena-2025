@@ -385,20 +385,26 @@ func (gs *GameState) applySpawnOrder(order *Order) {
 	order.Status = OK
 }
 
-func (gs *GameState) updateInfluence() {
-	hives := []struct {
-		Coords Coords
-		Entity *Entity
-	}{}
+type CoordsEntity struct {
+	Coords Coords
+	Entity *Entity
+}
+
+func (gs *GameState) Hives() []CoordsEntity {
+	hives := []CoordsEntity{}
 
 	for coords, hex := range gs.Hexes {
 		if hex.Entity != nil && hex.Entity.Type == HIVE {
-			hives = append(hives, struct {
-				Coords Coords
-				Entity *Entity
-			}{coords, hex.Entity})
+			hives = append(hives, CoordsEntity{coords, hex.Entity})
 		}
 	}
+
+	return hives
+}
+
+func (gs *GameState) updateInfluence() {
+
+	hives := gs.Hives()
 
 	for coords, hex := range gs.Hexes {
 		minDist := math.MaxUint32
@@ -413,9 +419,7 @@ func (gs *GameState) updateInfluence() {
 
 			if dist < minDist {
 				minDist = dist
-				for k := range closestPlayers {
-					delete(closestPlayers, k)
-				}
+				clear(closestPlayers)
 			}
 
 			if dist <= minDist {

@@ -66,6 +66,8 @@ for coords,hex in pairs(data.hexes) do
 	if entity then
 		local c = entityToChar[entity.type] .. entity.player
 		lines[row][col] = c
+	elseif hex.influence >= 0 then
+		lines[row][col] = tostring(hex.influence)
 	end
 end
 

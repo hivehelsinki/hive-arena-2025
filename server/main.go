@@ -12,7 +12,7 @@ func main() {
 
 	gs := common.NewGameState(mapData, 4)
 	gs = gs.PlayerView(1)
-	
+
 	txt, _ := json.Marshal(gs)
 	fmt.Println(string(txt))
 }
