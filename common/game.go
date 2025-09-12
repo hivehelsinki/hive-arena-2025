@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/rand"
 	"slices"
+	"iter"
 )
 
 const (
@@ -390,29 +391,27 @@ type CoordsEntity struct {
 	Entity *Entity
 }
 
-func (gs *GameState) Hives() []CoordsEntity {
-	hives := []CoordsEntity{}
-
-	for coords, hex := range gs.Hexes {
-		if hex.Entity != nil && hex.Entity.Type == HIVE {
-			hives = append(hives, CoordsEntity{coords, hex.Entity})
+func (gs *GameState) Hives() iter.Seq2[Coords, *Entity] {
+	return func(yield func(Coords, *Entity) bool) {
+		for coords, hex := range gs.Hexes {
+			if hex.Entity != nil && hex.Entity.Type == HIVE {
+				if !yield(coords, hex.Entity) {
+					return
+				}
+			}
 		}
 	}
-
-	return hives
 }
 
 func (gs *GameState) updateInfluence() {
-
-	hives := gs.Hives()
 
 	for coords, hex := range gs.Hexes {
 		minDist := math.MaxUint32
 		closestPlayers := make(map[int]bool)
 		previousInfluence := hex.Influence
 
-		for _, hive := range hives {
-			dist := coords.Distance(hive.Coords)
+		for hiveCoords, hive := range gs.Hives() {
+			dist := coords.Distance(hiveCoords)
 			if dist > HIVE_FIELD_OF_VIEW {
 				continue
 			}
@@ -423,7 +422,7 @@ func (gs *GameState) updateInfluence() {
 			}
 
 			if dist <= minDist {
-				closestPlayers[hive.Entity.Player] = true
+				closestPlayers[hive.Player] = true
 			}
 		}
 
