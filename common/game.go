@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"slices"
 )
 
 const (
@@ -20,12 +21,10 @@ const (
 	INFLUENCE_TIMEOUT  = 50
 )
 
-type PlayerID int
-
 type Entity struct {
 	Type   EntityType	`json:"type"`
 	HP     int			`json:"hp"`
-	Player PlayerID		`json:"player"`
+	Player int		`json:"player"`
 }
 
 type EntityType int
@@ -39,13 +38,13 @@ const (
 type Hex struct {
 	Terrain   Terrain	`json:"terrain"`
 	Resources uint		`json:"resources,omitempty"`
-	Influence PlayerID	`json:"influence"`
+	Influence int	`json:"influence"`
 	Entity    *Entity	`json:"entity,omitempty"`
 }
 
 type Order struct {
 	Type      OrderType
-	Player    PlayerID
+	Player    int
 	Coords    Coords
 	Direction Direction
 
@@ -88,13 +87,13 @@ func (o *Order) Target() Coords {
 }
 
 type GameState struct {
-	NumPlayers          PlayerID		`json:"numPlayers"`
+	NumPlayers          int		`json:"numPlayers"`
 	Turn                uint			`json:"turn"`
 	Hexes               map[Coords]*Hex	`json:"hexes"`
 	PlayerResources     []uint			`json:"playerResources"`
 	LastInfluenceChange uint			`json:"lastInfluenceChange"`
 
-	Winners  []PlayerID					`json:"winners,omitempty"`
+	Winners  []int					`json:"winners,omitempty"`
 	GameOver bool						`json:"gameOver"`
 }
 
@@ -108,7 +107,7 @@ var playerMappings = [][]int{
 	{0, 1, 2, 3, 4, 5},
 }
 
-func NewGameState(mapData *MapData, numPlayers PlayerID) *GameState {
+func NewGameState(mapData *MapData, numPlayers int) *GameState {
 	gs := &GameState{
 		NumPlayers: numPlayers,
 		Hexes:      make(map[Coords]*Hex),
@@ -126,9 +125,9 @@ func NewGameState(mapData *MapData, numPlayers PlayerID) *GameState {
 
 		switch spawn.Kind {
 		case HIVE:
-			gs.Hexes[spawn.Coords].Entity = &Entity{Type: HIVE, HP: INIT_HIVE_HP, Player: PlayerID(player)}
+			gs.Hexes[spawn.Coords].Entity = &Entity{Type: HIVE, HP: INIT_HIVE_HP, Player: player}
 		case BEE:
-			gs.Hexes[spawn.Coords].Entity = &Entity{Type: BEE, HP: INIT_BEE_HP, Player: PlayerID(player)}
+			gs.Hexes[spawn.Coords].Entity = &Entity{Type: BEE, HP: INIT_BEE_HP, Player: player}
 		}
 	}
 
@@ -161,7 +160,6 @@ func (gs *GameState) TerrainAt(coords Coords) Terrain {
 	return hex.Terrain
 }
 
-// Entities returns a slice of all entities with their coordinates.
 func (gs *GameState) Entities() []struct {
 	Coords Coords
 	Entity *Entity
@@ -187,7 +185,7 @@ func (gs *GameState) ProcessOrders(orders [][]Order) ([]Order, error) {
 		return nil, fmt.Errorf("cannot process orders in a finished game")
 	}
 
-	for id := PlayerID(0); id < gs.NumPlayers; id++ {
+	for id := int(0); id < gs.NumPlayers; id++ {
 		for i := range orders[id] {
 			orders[id][i].Player = id
 		}
@@ -404,7 +402,7 @@ func (gs *GameState) updateInfluence() {
 
 	for coords, hex := range gs.Hexes {
 		minDist := math.MaxUint32
-		closestPlayers := make(map[PlayerID]bool)
+		closestPlayers := make(map[int]bool)
 		previousInfluence := hex.Influence
 
 		for _, hive := range hives {
@@ -440,13 +438,18 @@ func (gs *GameState) updateInfluence() {
 }
 
 func (gs *GameState) checkEndGame() {
-	if gs.Turn-gs.LastInfluenceChange > INFLUENCE_TIMEOUT {
+
+	// No influence change in a while
+
+	if gs.Turn - gs.LastInfluenceChange > INFLUENCE_TIMEOUT {
 		gs.GameOver = true
 		return
 	}
 
-	influenceCounts := make([]uint, gs.NumPlayers)
-	hiveCounts := make([]uint, gs.NumPlayers)
+	// Count influenced cells and hives
+
+	influenceCounts := make([]int, gs.NumPlayers)
+	hiveCounts := make([]int, gs.NumPlayers)
 
 	for _, hex := range gs.Hexes {
 		if hex.Influence >= 0 {
@@ -457,17 +460,19 @@ func (gs *GameState) checkEndGame() {
 		}
 	}
 
-	var hivesWithPlayers int
+	// If a single player has hives, they win
+
+	playersWithHives := 0
 	for _, count := range hiveCounts {
 		if count > 0 {
-			hivesWithPlayers++
+			playersWithHives++
 		}
 	}
 
-	if hivesWithPlayers == 1 {
+	if playersWithHives == 1 {
 		for player, count := range hiveCounts {
 			if count > 0 {
-				gs.Winners = append(gs.Winners, PlayerID(player))
+				gs.Winners = append(gs.Winners, player)
 				break
 			}
 		}
@@ -475,30 +480,26 @@ func (gs *GameState) checkEndGame() {
 		return
 	}
 
-	maxInfluence := uint(0)
-	for _, count := range influenceCounts {
-		if count > maxInfluence {
-			maxInfluence = count
-		}
-	}
+	// Check if anyone has more than half the map influenced
 
-	if maxInfluence <= uint(len(gs.Hexes))/2 {
+	maxInfluence := slices.Max(influenceCounts)
+	if maxInfluence <= len(gs.Hexes) / 2 {
 		return
 	}
 
-	for p := PlayerID(0); p < gs.NumPlayers; p++ {
-		if influenceCounts[p] == maxInfluence {
-			gs.Winners = []PlayerID{p}
+	for player, influence := range influenceCounts {
+		if influence == maxInfluence {
+			gs.Winners = append(gs.Winners, player)
 		}
 	}
 
 	gs.GameOver = true
 }
 
-func (gs *GameState) isVisibleBy(coords Coords, player PlayerID) bool {
-	for _, e := range gs.Entities() {
-		if e.Entity.Player == player {
-			if e.Coords.Distance(coords) <= HIVE_FIELD_OF_VIEW {
+func (gs *GameState) isVisibleBy(coords Coords, player int) bool {
+	for hcoords, hex := range gs.Hexes {
+		if hex.Entity != nil && hex.Entity.Player == player {
+			if hcoords.Distance(coords) <= HIVE_FIELD_OF_VIEW {
 				return true
 			}
 		}
@@ -506,7 +507,7 @@ func (gs *GameState) isVisibleBy(coords Coords, player PlayerID) bool {
 	return false
 }
 
-func (gs *GameState) PlayerView(player PlayerID) *GameState {
+func (gs *GameState) PlayerView(player int) *GameState {
 	view := &GameState{
 		NumPlayers:          gs.NumPlayers,
 		Turn:                gs.Turn,
