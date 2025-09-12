@@ -48,8 +48,7 @@ type Order struct {
 	Player    int
 	Coords    Coords
 	Direction Direction
-
-	Status OrderStatus
+	Status    OrderStatus
 }
 
 type OrderType int
@@ -383,7 +382,7 @@ func (gs *GameState) Hives() iter.Seq2[Coords, *Entity] {
 func (gs *GameState) updateInfluence() {
 
 	for coords, hex := range gs.Hexes {
-		minDist := math.MaxUint32
+		minDist := math.MaxInt
 		closestPlayers := make(map[int]bool)
 		previousInfluence := hex.Influence
 
@@ -478,10 +477,10 @@ func (gs *GameState) checkEndGame() {
 
 func (gs *GameState) isVisibleBy(coords Coords, player int) bool {
 	for hcoords, hex := range gs.Hexes {
-		if hex.Entity != nil && hex.Entity.Player == player {
-			if hcoords.Distance(coords) <= HIVE_FIELD_OF_VIEW {
-				return true
-			}
+		if hex.Entity != nil &&
+			hex.Entity.Player == player &&
+			hcoords.Distance(coords) <= HIVE_FIELD_OF_VIEW {
+			return true
 		}
 	}
 	return false
