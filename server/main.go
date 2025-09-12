@@ -7,7 +7,7 @@ import (
 
 func main() {
 
-	foo := common.Game{345}
+	foo, err := common.LoadMap("maps/balanced.txt")
 
-	fmt.Println("Salut la companie ", foo)
+	fmt.Printf("%+v \n %v", foo, err)
 }
