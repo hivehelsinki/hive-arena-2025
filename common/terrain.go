@@ -81,7 +81,6 @@ type Spawn struct {
 }
 
 type MapData struct {
-	Name   string
 	Map    map[Coords]Terrain
 	Spawns []Spawn
 }
@@ -97,10 +96,10 @@ var charToSpawn = map[rune]EntityType{
 	'B': BEE,
 }
 
-func LoadMap(path string) (*MapData, error) {
+func LoadMap(path string) (MapData, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return MapData{}, err
 	}
 
 	lines := strings.Split(string(content), "\n")
@@ -127,8 +126,7 @@ func LoadMap(path string) (*MapData, error) {
 		}
 	}
 
-	return &MapData{
-		Name:   path,
+	return MapData{
 		Map:    gameMap,
 		Spawns: spawns,
 	}, nil
