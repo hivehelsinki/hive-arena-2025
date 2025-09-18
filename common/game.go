@@ -44,11 +44,11 @@ type Hex struct {
 }
 
 type Order struct {
-	Type      OrderType
-	Player    int
-	Coords    Coords
-	Direction Direction
-	Status    OrderStatus
+	Type      OrderType   `json:"type"`
+	Player    int         `json:"player"`
+	Coords    Coords      `json:"coords"`
+	Direction Direction   `json:"direction"`
+	Status    OrderStatus `json:"status"`
 }
 
 type OrderType int

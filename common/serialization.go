@@ -108,3 +108,20 @@ func (t *OrderType) UnmarshalText(b []byte) error {
 
 	return fmt.Errorf("Could not unmarshal OrderType: %s", str)
 }
+
+func (o OrderStatus) String() string {
+	return []string{
+		"PENDING",
+		"INVALID_UNIT",
+		"BLOCKED",
+		"INVALID_TARGET",
+		"CANNOT_FORAGE",
+		"NOT_ENOUGH_RESOURCES",
+		"UNIT_ALREADY_ACTED",
+		"OK",
+	}[o]
+}
+
+func (o OrderStatus) MarshalText() (text []byte, err error) {
+	return []byte(o.String()), nil
+}

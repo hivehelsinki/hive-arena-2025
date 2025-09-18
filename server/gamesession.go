@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"maps"
 	"math/rand"
 	"slices"
 	"sync"
 	"time"
-	"log"
 )
 
 import . "hive-arena/common"

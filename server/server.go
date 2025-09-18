@@ -263,12 +263,12 @@ func (server *Server) persistGame(game *GameSession) {
 		game.Map,
 	)
 
-	info := map[string]any {
-		"id": game.ID,
-		"map": game.Map,
+	info := map[string]any{
+		"id":          game.ID,
+		"map":         game.Map,
 		"createdDate": game.CreatedDate,
-		"state": game.State,
-		"history": game.History,
+		"state":       game.State,
+		"history":     game.History,
 	}
 
 	file, _ := os.Create(path)
