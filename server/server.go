@@ -237,7 +237,6 @@ func (server *Server) handleOrders(w http.ResponseWriter, r *http.Request) {
 
 	game.SetOrders(player.ID, orders)
 
-	log.Printf("Player %s posted orders in game %s", player.Name, id)
 	writeJson(w, "OK", http.StatusOK)
 }
 

@@ -131,6 +131,8 @@ func (game *GameSession) SetOrders(playerid int, orders []*Order) {
 
 	game.PendingOrders[playerid] = orders
 
+	log.Printf("Player %s posted orders in game %s", game.Players[playerid].Name, game.ID)
+
 	if game.allPlayed() {
 		game.processTurn()
 	}
