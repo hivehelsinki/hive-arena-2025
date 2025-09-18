@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"log"
 	"maps"
 	"net/http"
@@ -277,6 +278,26 @@ func (server *Server) persistGame(game *GameSession) {
 	json.NewEncoder(file).Encode(info)
 }
 
+func (server *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
+	logRoute(r)
+
+	id := r.URL.Query().Get("id")
+	game := server.getGameSync(id)
+	if game == nil {
+		writeJson(w, "Invalid game id: "+id, http.StatusBadRequest)
+		return
+	}
+
+	upgrader := websocket.Upgrader{}
+	socket, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("Failed to upgrade connection: " + err.Error())
+		return
+	}
+
+	game.RegisterWebSocket(socket)
+}
+
 func RunServer(port int) {
 
 	server := Server{
@@ -289,6 +310,7 @@ func RunServer(port int) {
 	http.HandleFunc("GET /join", server.handleJoin)
 	http.HandleFunc("GET /game", server.handleGame)
 	http.HandleFunc("POST /orders", server.handleOrders)
+	http.HandleFunc("GET /ws", server.handleWebSocket)
 
 	fs := http.FileServer(http.Dir("./" + HistoryDir + "/"))
 	http.Handle("GET /history/", http.StripPrefix("/history/", fs))

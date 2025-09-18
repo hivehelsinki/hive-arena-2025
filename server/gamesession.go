@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"log"
 	"maps"
 	"math/rand"
@@ -33,6 +35,8 @@ type GameSession struct {
 
 	PendingOrders [][]*Order
 	History       [][]*Order
+
+	Sockets []*websocket.Conn
 }
 
 func generateTokens(count int) []string {
@@ -108,6 +112,8 @@ func (game *GameSession) GetView(token string) *GameState {
 
 func (game *GameSession) BeginTurn() {
 
+	game.notifySockets()
+
 	if game.State.GameOver {
 		return
 	}
@@ -154,4 +160,26 @@ func (game *GameSession) processTurn() {
 	game.History = append(game.History, results)
 
 	game.BeginTurn()
+}
+
+func (game *GameSession) RegisterWebSocket(socket *websocket.Conn) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	game.Sockets = append(game.Sockets, socket)
+}
+
+func (game *GameSession) notifySockets() {
+	message, _ := json.Marshal(map[string]any{
+		"turn":     game.State.Turn,
+		"gameOver": game.State.GameOver,
+	})
+
+	for _, socket := range game.Sockets {
+		socket.WriteMessage(websocket.TextMessage, message)
+
+		if game.State.GameOver {
+			socket.Close()
+		}
+	}
 }
