@@ -56,3 +56,18 @@ func NewGameSession(id string, players int, mapname string, mapdata MapData) *Ga
 func (game *GameSession) IsFull() bool {
 	return len(game.Players) == game.State.NumPlayers
 }
+
+func (game *GameSession) AddPlayer(name string) *Player {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if game.IsFull() {
+		return nil
+	}
+
+	id := len(game.Players)
+	player := Player{id, name, game.PlayerTokens[id]}
+
+	game.Players = append(game.Players, player)
+	return &player
+}

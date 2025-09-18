@@ -43,7 +43,7 @@ local function start_game(players, map)
 	game.players = {}
 
 	for i = 1, game.numPlayers do
-		local player = req("join?id=%d&name=%s", game.id, "coolplayer" .. math.random(1000000))
+		local player = req("join?id=%s&name=%s", game.id, "coolplayer" .. math.random(1000000))
 		table.insert(game.players, player)
 	end
 
@@ -55,14 +55,14 @@ local g = start_game(math.random(2,6), "balanced")
 print(json.encode(g))
 
 print("Admin view")
-local state = req("game?id=%d&token=%s", g.id, g.adminToken)
+local state = req("game?id=%s&token=%s", g.id, g.adminToken)
 print(json.encode(state))
 
 while false do
 
 	for i,player in ipairs(g.players) do
 		print("View from player ", player.id)
-		local state = req("game?id=%d&token=%s", g.id, player.token)
+		local state = req("game?id=%s&token=%s", g.id, player.token)
 		print(json.encode(state))
 
 		local orders = {
@@ -73,7 +73,7 @@ while false do
 			}
 		}
 
-		local res = post("orders?id=%d&token=%s", orders, g.id, player.token)
+		local res = post("orders?id=%s&token=%s", orders, g.id, player.token)
 		print(json.encode(res))
 	end
 

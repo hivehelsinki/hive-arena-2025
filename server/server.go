@@ -91,8 +91,11 @@ func (server *Server) handleNewGame(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Created game %s (%s, %d players)", id, mapname, players)
 
 	writeJson(w, map[string]any{
-		"id":         game.ID,
-		"adminToken": game.AdminToken,
+		"id":          game.ID,
+		"numPlayers":  game.State.NumPlayers,
+		"map":         game.Map,
+		"createdDate": game.CreatedDate,
+		"adminToken":  game.AdminToken,
 	}, http.StatusOK)
 }
 
@@ -107,6 +110,13 @@ func (server *Server) removeIfNotStarted(id string) {
 	}
 }
 
+func (server *Server) getGameSync(id string) *GameSession {
+	server.mutex.Lock()
+	defer server.mutex.Unlock()
+
+	return server.Games[id]
+}
+
 func (server *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	logRoute(r)
 
@@ -116,15 +126,45 @@ func (server *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	var statuses []map[string]any
 	for _, game := range server.Games {
 		statuses = append(statuses, map[string]any{
-			"id": game.ID,
-			"createdDate": game.CreatedDate,
-			"numPlayers": game.State.NumPlayers,
+			"id":            game.ID,
+			"createdDate":   game.CreatedDate,
+			"numPlayers":    game.State.NumPlayers,
 			"playersJoined": len(game.Players),
-			"map": game.Map,
+			"map":           game.Map,
 		})
 	}
 
 	writeJson(w, statuses, http.StatusOK)
+}
+
+func (server *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
+	logRoute(r)
+
+	id := r.URL.Query().Get("id")
+	game := server.getGameSync(id)
+	if game == nil {
+		writeJson(w, "Invalid game id: "+id, http.StatusBadRequest)
+		return
+	}
+
+	name := r.URL.Query().Get("name")
+	if name == "" {
+		writeJson(w, "Invalid name", http.StatusBadRequest)
+		return
+	}
+
+	player := game.AddPlayer(name)
+	if player == nil {
+		writeJson(w, "Game is full", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("Player %s joined game %s (#%d, %s)", player.Name, game.ID, player.ID, player.Token)
+
+	writeJson(w, map[string]any{
+		"id":    player.ID,
+		"token": player.Token,
+	}, http.StatusOK)
 }
 
 func RunServer(port int) {
@@ -136,6 +176,7 @@ func RunServer(port int) {
 
 	http.HandleFunc("GET /newgame", server.handleNewGame)
 	http.HandleFunc("GET /status", server.handleStatus)
+	http.HandleFunc("GET /join", server.handleJoin)
 
 	log.Printf("Listening on port %d", port)
 
