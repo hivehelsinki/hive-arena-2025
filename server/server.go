@@ -17,7 +17,7 @@ import (
 import . "hive-arena/common"
 
 const MapDir = "maps"
-const GameStartTimeout = 5 * time.Second
+const GameStartTimeout = 5 * time.Minute
 
 type Server struct {
 	mutex sync.Mutex
@@ -52,6 +52,10 @@ func loadMaps() map[string]MapData {
 	return data
 }
 
+func logRoute(r *http.Request) {
+	log.Printf("%s %v %v", r.Method, r.URL, r.RemoteAddr)
+}
+
 func writeJson(w http.ResponseWriter, payload any, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -60,7 +64,7 @@ func writeJson(w http.ResponseWriter, payload any, status int) {
 
 func (server *Server) handleNewGame(w http.ResponseWriter, r *http.Request) {
 
-	log.Printf("%s %v %v", r.Method, r.URL, r.RemoteAddr)
+	logRoute(r)
 
 	mapname := r.URL.Query().Get("map")
 	mapdata, mapfound := server.Maps[mapname]
@@ -78,7 +82,7 @@ func (server *Server) handleNewGame(w http.ResponseWriter, r *http.Request) {
 
 	server.mutex.Lock()
 	id := GenerateUniqueID(server.Games)
-	game := NewGameSession(id, players, mapdata)
+	game := NewGameSession(id, players, mapname, mapdata)
 	server.Games[id] = game
 	server.mutex.Unlock()
 
@@ -103,6 +107,26 @@ func (server *Server) removeIfNotStarted(id string) {
 	}
 }
 
+func (server *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
+	logRoute(r)
+
+	server.mutex.Lock()
+	defer server.mutex.Unlock()
+
+	var statuses []map[string]any
+	for _, game := range server.Games {
+		statuses = append(statuses, map[string]any{
+			"id": game.ID,
+			"createdDate": game.CreatedDate,
+			"numPlayers": game.State.NumPlayers,
+			"playersJoined": len(game.Players),
+			"map": game.Map,
+		})
+	}
+
+	writeJson(w, statuses, http.StatusOK)
+}
+
 func RunServer(port int) {
 
 	server := Server{
@@ -111,6 +135,8 @@ func RunServer(port int) {
 	}
 
 	http.HandleFunc("GET /newgame", server.handleNewGame)
+	http.HandleFunc("GET /status", server.handleStatus)
+
 	log.Printf("Listening on port %d", port)
 
 	err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
