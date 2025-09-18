@@ -290,6 +290,9 @@ func RunServer(port int) {
 	http.HandleFunc("GET /game", server.handleGame)
 	http.HandleFunc("POST /orders", server.handleOrders)
 
+	fs := http.FileServer(http.Dir("./" + HistoryDir + "/"))
+	http.Handle("GET /history/", http.StripPrefix("/history/", fs))
+
 	log.Printf("Listening on port %d", port)
 
 	err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
