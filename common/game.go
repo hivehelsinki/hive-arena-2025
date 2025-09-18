@@ -107,7 +107,16 @@ var playerMappings = [][]int{
 	{0, 1, 2, 3, 4, 5},
 }
 
-func NewGameState(mapData *MapData, numPlayers int) *GameState {
+func IsValidNumPlayers(n int) bool {
+	return n >= 1 && n <= 6
+}
+
+func NewGameState(mapData MapData, numPlayers int) *GameState {
+
+	if !IsValidNumPlayers(numPlayers) {
+		return nil
+	}
+
 	gs := &GameState{
 		NumPlayers: numPlayers,
 		Hexes:      make(map[Coords]*Hex),

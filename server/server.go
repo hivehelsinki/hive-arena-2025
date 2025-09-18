@@ -71,15 +71,14 @@ func (server *Server) handleNewGame(w http.ResponseWriter, r *http.Request) {
 
 	playerStr := r.URL.Query().Get("players")
 	players, ok := strconv.Atoi(playerStr)
-	if ok != nil {
+	if ok != nil || !IsValidNumPlayers(players) {
 		writeJson(w, "Invalid number of players: "+playerStr, http.StatusBadRequest)
 		return
 	}
 
-	game := NewGameSession(players, mapdata)
-
 	server.mutex.Lock()
 	id := GenerateUniqueID(server.Games)
+	game := NewGameSession(id, players, mapdata)
 	server.Games[id] = game
 	server.mutex.Unlock()
 
@@ -88,8 +87,8 @@ func (server *Server) handleNewGame(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Created game %s (%s, %d players)", id, mapname, players)
 
 	writeJson(w, map[string]any{
-		"id":         id,
-		"adminToken": 2345678,
+		"id":         game.ID,
+		"adminToken": game.AdminToken,
 	}, http.StatusOK)
 }
 
