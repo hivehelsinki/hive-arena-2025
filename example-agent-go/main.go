@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strconv"
 )
 
 import . "hive-arena/agent"
@@ -33,8 +32,7 @@ func main() {
 	}
 
 	host := os.Args[1]
-	idStr, _ := strconv.Atoi(os.Args[2])
-	id := uint(idStr)
+	id := os.Args[2]
 	name := os.Args[3]
 
 	Run(host, id, name, think)
