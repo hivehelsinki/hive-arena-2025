@@ -17,6 +17,7 @@ import (
 import . "hive-arena/common"
 
 const MapDir = "maps"
+const HistoryDir = "history"
 const GameStartTimeout = 5 * time.Minute
 
 type Server struct {
@@ -123,7 +124,7 @@ func (server *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 	server.mutex.Lock()
 	defer server.mutex.Unlock()
 
-	var statuses []map[string]any
+	var statuses = []map[string]any{}
 	for _, game := range server.Games {
 		statuses = append(statuses, map[string]any{
 			"id":            game.ID,
@@ -237,7 +238,43 @@ func (server *Server) handleOrders(w http.ResponseWriter, r *http.Request) {
 
 	game.SetOrders(player.ID, orders)
 
+	if game.State.GameOver {
+		log.Printf("Game %s is over", id)
+		server.persistGame(game)
+
+		time.AfterFunc(time.Minute, func() {
+			server.mutex.Lock()
+			defer server.mutex.Unlock()
+
+			delete(server.Games, id)
+		})
+	}
+
 	writeJson(w, "OK", http.StatusOK)
+}
+
+func (server *Server) persistGame(game *GameSession) {
+
+	date, _ := game.CreatedDate.MarshalText()
+	path := fmt.Sprintf("%s/%s-%s-%s.json",
+		HistoryDir,
+		date,
+		game.ID,
+		game.Map,
+	)
+
+	info := map[string]any {
+		"id": game.ID,
+		"map": game.Map,
+		"createdDate": game.CreatedDate,
+		"state": game.State,
+		"history": game.History,
+	}
+
+	file, _ := os.Create(path)
+	defer file.Close()
+
+	json.NewEncoder(file).Encode(info)
 }
 
 func RunServer(port int) {

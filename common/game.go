@@ -208,9 +208,8 @@ func (gs *GameState) ProcessOrders(orders [][]*Order) ([]*Order, error) {
 		// Apply them
 
 		for _, order := range roundOrders {
-
+			processed = append(processed, order)
 			unit := gs.EntityAt(order.Coords)
-
 			if unit == nil {
 				order.Status = INVALID_UNIT
 				continue
@@ -220,7 +219,6 @@ func (gs *GameState) ProcessOrders(orders [][]*Order) ([]*Order, error) {
 			} else {
 				gs.applyOrder(order)
 				acted[unit] = true
-				processed = append(processed, order)
 			}
 		}
 	}
