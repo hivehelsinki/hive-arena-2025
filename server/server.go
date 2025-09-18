@@ -161,6 +161,10 @@ func (server *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Player %s joined game %s (#%d, %s)", player.Name, game.ID, player.ID, player.Token)
 
+	if game.IsFull() {
+		log.Printf("Game %s has started", id)
+	}
+
 	writeJson(w, map[string]any{
 		"id":    player.ID,
 		"token": player.Token,
@@ -183,7 +187,6 @@ func (server *Server) handleGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token := r.URL.Query().Get("token")
-
 	if token == game.AdminToken {
 		writeJson(w, game.State, http.StatusOK)
 		return
@@ -198,6 +201,46 @@ func (server *Server) handleGame(w http.ResponseWriter, r *http.Request) {
 	writeJson(w, view, http.StatusOK)
 }
 
+func (server *Server) handleOrders(w http.ResponseWriter, r *http.Request) {
+	logRoute(r)
+
+	id := r.URL.Query().Get("id")
+	game := server.getGameSync(id)
+	if game == nil {
+		writeJson(w, "Invalid game id: "+id, http.StatusBadRequest)
+		return
+	}
+
+	if !game.IsFull() {
+		writeJson(w, "Game has not started", http.StatusBadRequest)
+		return
+	}
+
+	if game.State.GameOver {
+		writeJson(w, "Game is over", http.StatusBadRequest)
+		return
+	}
+
+	token := r.URL.Query().Get("token")
+	player := game.Player(token)
+	if player == nil {
+		writeJson(w, "Invalid token", http.StatusForbidden)
+		return
+	}
+
+	var orders []Order
+	err := json.NewDecoder(r.Body).Decode(&orders)
+	if err != nil {
+		writeJson(w, "Invalid or malformed JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	game.SetOrders(player.ID, orders)
+
+	log.Printf("Player %s posted orders in game %s", player.Name, id)
+	writeJson(w, "OK", http.StatusOK)
+}
+
 func RunServer(port int) {
 
 	server := Server{
@@ -209,6 +252,7 @@ func RunServer(port int) {
 	http.HandleFunc("GET /status", server.handleStatus)
 	http.HandleFunc("GET /join", server.handleJoin)
 	http.HandleFunc("GET /game", server.handleGame)
+	http.HandleFunc("POST /orders", server.handleOrders)
 
 	log.Printf("Listening on port %d", port)
 

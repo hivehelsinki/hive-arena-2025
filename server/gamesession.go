@@ -27,6 +27,8 @@ type GameSession struct {
 	PlayerTokens []string
 	Players      []Player
 	State        *GameState
+
+	PendingOrders [][]Order
 }
 
 func generateTokens(count int) []string {
@@ -69,17 +71,44 @@ func (game *GameSession) AddPlayer(name string) *Player {
 	player := Player{id, name, game.PlayerTokens[id]}
 
 	game.Players = append(game.Players, player)
+
+	if game.IsFull() {
+		game.BeginTurn()
+	}
+
 	return &player
+}
+
+func (game *GameSession) Player(token string) *Player {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	playerid := slices.Index(game.PlayerTokens, token)
+	if playerid < 0 {
+		return nil
+	}
+	return &game.Players[playerid]
 }
 
 func (game *GameSession) GetView(token string) *GameState {
 	game.mutex.Lock()
 	defer game.mutex.Unlock()
-	
+
 	playerid := slices.Index(game.PlayerTokens, token)
 	if playerid < 0 {
 		return nil
 	}
 
 	return game.State.PlayerView(playerid)
+}
+
+func (game *GameSession) BeginTurn() {
+	game.PendingOrders = make([][]Order, game.State.NumPlayers)
+}
+
+func (game *GameSession) SetOrders(playerid int, orders []Order) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	game.PendingOrders[playerid] = orders
 }

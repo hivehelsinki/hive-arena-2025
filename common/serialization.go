@@ -31,6 +31,17 @@ func (c Coords) MarshalText() (text []byte, err error) {
 	return []byte(c.String()), nil
 }
 
+func (c *Coords) UnmarshalText(b []byte) error {
+	str := string(b)
+	coords, err := FromString(str)
+	if err != nil {
+		return err
+	}
+
+	*c = coords
+	return nil
+}
+
 func (t Terrain) String() string {
 	return []string{"INVALID", "EMPTY", "ROCK", "FIELD"}[t]
 }
@@ -39,12 +50,26 @@ func (t Terrain) MarshalText() (text []byte, err error) {
 	return []byte(t.String()), nil
 }
 
+var directionStrings = []string{"E", "SE", "SW", "W", "NW", "NE"}
+
 func (d Direction) String() string {
-	return []string{"E", "SE", "SW", "W", "NW", "NE"}[d]
+	return directionStrings[d]
 }
 
 func (d Direction) MarshalText() (text []byte, err error) {
-	return []byte(d.String()), nil
+	return []byte(directionStrings[d]), nil
+}
+
+func (d *Direction) UnmarshalText(b []byte) error {
+	str := string(b)
+	index := slices.Index(directionStrings, str)
+
+	if index >= 0 {
+		*d = Direction(index)
+		return nil
+	}
+
+	return fmt.Errorf("Could not unmarshal Direction: %s", str)
 }
 
 func (t EntityType) String() string {
