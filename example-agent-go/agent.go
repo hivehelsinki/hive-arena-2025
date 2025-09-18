@@ -1,4 +1,4 @@
-package agent
+package main
 
 import (
 	"bytes"
@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 )
+
+import . "hive-arena/common"
 
 func request(url string) string {
 
@@ -31,12 +33,12 @@ func request(url string) string {
 }
 
 type JoinResponse struct {
-	Id    uint
+	Id    int
 	Token string
 }
 
 type WebSocketMessage struct {
-	Turn     uint
+	Turn     int
 	GameOver bool
 }
 
@@ -98,7 +100,7 @@ func sendOrders(host string, id string, token string, orders []Order) {
 	}
 }
 
-func Run(host string, id string, name string, callback func(*GameState, uint) []Order ) {
+func Run(host string, id string, name string, callback func(*GameState, int) []Order ) {
 
 	playerInfo := joinGame(host, id, name)
 	ws := startWebSocket(host, id)

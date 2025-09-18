@@ -8,7 +8,7 @@ local headers, stream = http.new_from_uri("http://" .. host .. "/newgame?players
 local info = json.decode(stream:get_body_as_string())
 
 for i = 1,4 do
-	os.execute(string.format("go run . %s %s %s %s",
+	os.execute(string.format("go run hive-arena/example-agent-go %s %s %s %s",
 		host,
 		info.id,
 		"Team" .. i,

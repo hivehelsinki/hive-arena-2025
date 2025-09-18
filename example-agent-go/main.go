@@ -5,9 +5,9 @@ import (
 	"os"
 )
 
-import . "hive-arena/agent"
+import . "hive-arena/common"
 
-func think(state *GameState, player uint) []Order {
+func think(state *GameState, player int) []Order {
 
 	var orders []Order
 
@@ -16,9 +16,13 @@ func think(state *GameState, player uint) []Order {
 	for coords, hex := range state.Hexes {
 		unit := hex.Entity
 
-		if unit != nil && unit.Type == "BEE" && unit.Player == player {
+		if unit != nil && unit.Type == BEE && unit.Player == player {
 			fmt.Println(coords, unit)
-			orders = append(orders, Order{"MOVE", coords, "E"})
+			orders = append(orders, Order{
+				Type: MOVE,
+				Coords: coords,
+				Direction: E,
+			})
 		}
 	}
 
