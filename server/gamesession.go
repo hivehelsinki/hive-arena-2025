@@ -12,6 +12,8 @@ import (
 
 import . "hive-arena/common"
 
+const TurnTimeout = 5 * time.Second
+
 type Player struct {
 	ID    int
 	Name  string
@@ -105,7 +107,22 @@ func (game *GameSession) GetView(token string) *GameState {
 }
 
 func (game *GameSession) BeginTurn() {
+
+	if game.State.GameOver {
+		return
+	}
+
 	game.PendingOrders = make([][]*Order, game.State.NumPlayers)
+
+	currentTurn := game.State.Turn
+	time.AfterFunc(TurnTimeout, func() {
+		game.mutex.Lock()
+		defer game.mutex.Unlock()
+
+		if game.State.Turn == currentTurn {
+			game.processTurn()
+		}
+	})
 }
 
 func (game *GameSession) SetOrders(playerid int, orders []*Order) {
