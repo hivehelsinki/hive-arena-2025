@@ -71,3 +71,15 @@ func (game *GameSession) AddPlayer(name string) *Player {
 	game.Players = append(game.Players, player)
 	return &player
 }
+
+func (game *GameSession) GetView(token string) *GameState {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+	
+	playerid := slices.Index(game.PlayerTokens, token)
+	if playerid < 0 {
+		return nil
+	}
+
+	return game.State.PlayerView(playerid)
+}

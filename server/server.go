@@ -167,6 +167,37 @@ func (server *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
 	}, http.StatusOK)
 }
 
+func (server *Server) handleGame(w http.ResponseWriter, r *http.Request) {
+	logRoute(r)
+
+	id := r.URL.Query().Get("id")
+	game := server.getGameSync(id)
+	if game == nil {
+		writeJson(w, "Invalid game id: "+id, http.StatusBadRequest)
+		return
+	}
+
+	if !game.IsFull() {
+		writeJson(w, "Game has not started", http.StatusBadRequest)
+		return
+	}
+
+	token := r.URL.Query().Get("token")
+
+	if token == game.AdminToken {
+		writeJson(w, game.State, http.StatusOK)
+		return
+	}
+
+	view := game.GetView(token)
+	if view == nil {
+		writeJson(w, "Invalid token", http.StatusForbidden)
+		return
+	}
+
+	writeJson(w, view, http.StatusOK)
+}
+
 func RunServer(port int) {
 
 	server := Server{
@@ -177,6 +208,7 @@ func RunServer(port int) {
 	http.HandleFunc("GET /newgame", server.handleNewGame)
 	http.HandleFunc("GET /status", server.handleStatus)
 	http.HandleFunc("GET /join", server.handleJoin)
+	http.HandleFunc("GET /game", server.handleGame)
 
 	log.Printf("Listening on port %d", port)
 
