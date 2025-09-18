@@ -228,7 +228,7 @@ func (server *Server) handleOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var orders []Order
+	var orders []*Order
 	err := json.NewDecoder(r.Body).Decode(&orders)
 	if err != nil {
 		writeJson(w, "Invalid or malformed JSON: "+err.Error(), http.StatusBadRequest)

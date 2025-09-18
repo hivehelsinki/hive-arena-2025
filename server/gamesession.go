@@ -7,6 +7,7 @@ import (
 	"slices"
 	"sync"
 	"time"
+	"log"
 )
 
 import . "hive-arena/common"
@@ -28,7 +29,8 @@ type GameSession struct {
 	Players      []Player
 	State        *GameState
 
-	PendingOrders [][]Order
+	PendingOrders [][]*Order
+	History       [][]*Order
 }
 
 func generateTokens(count int) []string {
@@ -103,12 +105,34 @@ func (game *GameSession) GetView(token string) *GameState {
 }
 
 func (game *GameSession) BeginTurn() {
-	game.PendingOrders = make([][]Order, game.State.NumPlayers)
+	game.PendingOrders = make([][]*Order, game.State.NumPlayers)
 }
 
-func (game *GameSession) SetOrders(playerid int, orders []Order) {
+func (game *GameSession) SetOrders(playerid int, orders []*Order) {
 	game.mutex.Lock()
 	defer game.mutex.Unlock()
 
 	game.PendingOrders[playerid] = orders
+
+	if game.allPlayed() {
+		game.processTurn()
+	}
+}
+
+func (game *GameSession) allPlayed() bool {
+	for _, orders := range game.PendingOrders {
+		if orders == nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (game *GameSession) processTurn() {
+	log.Printf("Processing orders for game %s, turn %d", game.ID, game.State.Turn)
+
+	results, _ := game.State.ProcessOrders(game.PendingOrders)
+	game.History = append(game.History, results)
+
+	game.BeginTurn()
 }
