@@ -1,17 +1,17 @@
 package main
 
 import (
-	"net/http"
+	"encoding/json"
 	"fmt"
-	"os"
 	"log"
-	"strings"
 	"maps"
+	"net/http"
+	"os"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
-	"encoding/json"
 )
 
 import . "hive-arena/common"
@@ -22,7 +22,7 @@ const GameStartTimeout = 5 * time.Second
 type Server struct {
 	mutex sync.Mutex
 
-	Maps map[string]MapData
+	Maps  map[string]MapData
 	Games map[string]*GameSession
 }
 
@@ -65,14 +65,14 @@ func (server *Server) handleNewGame(w http.ResponseWriter, r *http.Request) {
 	mapname := r.URL.Query().Get("map")
 	mapdata, mapfound := server.Maps[mapname]
 	if !mapfound {
-		writeJson(w, "Map not found: " + mapname, http.StatusBadRequest)
+		writeJson(w, "Map not found: "+mapname, http.StatusBadRequest)
 		return
 	}
 
 	playerStr := r.URL.Query().Get("players")
 	players, ok := strconv.Atoi(playerStr)
 	if ok != nil {
-		writeJson(w, "Invalid number of players: " + playerStr, http.StatusBadRequest)
+		writeJson(w, "Invalid number of players: "+playerStr, http.StatusBadRequest)
 		return
 	}
 
@@ -88,7 +88,7 @@ func (server *Server) handleNewGame(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Created game %s (%s, %d players)", id, mapname, players)
 
 	writeJson(w, map[string]any{
-		"id": id,
+		"id":         id,
 		"adminToken": 2345678,
 	}, http.StatusOK)
 }
@@ -107,7 +107,7 @@ func (server *Server) removeIfNotStarted(id string) {
 func RunServer(port int) {
 
 	server := Server{
-		Maps: loadMaps(),
+		Maps:  loadMaps(),
 		Games: make(map[string]*GameSession),
 	}
 

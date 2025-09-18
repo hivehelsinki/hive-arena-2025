@@ -3,7 +3,6 @@ package main
 import . "hive-arena/common"
 
 type GameSession struct {
-
 }
 
 func NewGameSession(players int, mapdata MapData) *GameSession {
