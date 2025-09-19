@@ -10,7 +10,7 @@ func (c Coords) String() string {
 	return fmt.Sprintf("%d,%d", c.Row, c.Col)
 }
 
-func FromString(s string) (Coords, error) {
+func CoordsFromString(s string) (Coords, error) {
 	parts := strings.Split(s, ",")
 	if len(parts) != 2 {
 		return Coords{}, fmt.Errorf("invalid coordinate string format: %s", s)
@@ -32,7 +32,7 @@ func (c Coords) MarshalText() (text []byte, err error) {
 
 func (c *Coords) UnmarshalText(b []byte) error {
 	str := string(b)
-	coords, err := FromString(str)
+	coords, err := CoordsFromString(str)
 	if err != nil {
 		return err
 	}
