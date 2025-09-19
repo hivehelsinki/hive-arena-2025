@@ -2,7 +2,6 @@ package common
 
 import (
 	"fmt"
-	"slices"
 	"strconv"
 	"strings"
 )
@@ -40,88 +39,4 @@ func (c *Coords) UnmarshalText(b []byte) error {
 
 	*c = coords
 	return nil
-}
-
-func (t Terrain) String() string {
-	return []string{"INVALID", "EMPTY", "ROCK", "FIELD"}[t]
-}
-
-func (t Terrain) MarshalText() (text []byte, err error) {
-	return []byte(t.String()), nil
-}
-
-var directionStrings = []string{"E", "SE", "SW", "W", "NW", "NE"}
-
-func (d Direction) String() string {
-	return directionStrings[d]
-}
-
-func (d Direction) MarshalText() (text []byte, err error) {
-	return []byte(directionStrings[d]), nil
-}
-
-func (d *Direction) UnmarshalText(b []byte) error {
-	str := string(b)
-	index := slices.Index(directionStrings, str)
-
-	if index >= 0 {
-		*d = Direction(index)
-		return nil
-	}
-
-	return fmt.Errorf("Could not unmarshal Direction: %s", str)
-}
-
-func (t EntityType) String() string {
-	return []string{"WALL", "HIVE", "BEE"}[t]
-}
-
-func (t EntityType) MarshalText() (text []byte, err error) {
-	return []byte(t.String()), nil
-}
-
-var orderTypeStrings = []string{
-	"MOVE",
-	"ATTACK",
-	"BUILD_WALL",
-	"BUILD_HIVE",
-	"FORAGE",
-	"SPAWN",
-}
-
-func (t OrderType) String() string {
-	return orderTypeStrings[t]
-}
-
-func (t OrderType) MarshalText() (text []byte, err error) {
-	return []byte(t.String()), nil
-}
-
-func (t *OrderType) UnmarshalText(b []byte) error {
-	str := string(b)
-	index := slices.Index(orderTypeStrings, str)
-
-	if index >= 0 {
-		*t = OrderType(index)
-		return nil
-	}
-
-	return fmt.Errorf("Could not unmarshal OrderType: %s", str)
-}
-
-func (o OrderStatus) String() string {
-	return []string{
-		"PENDING",
-		"INVALID_UNIT",
-		"BLOCKED",
-		"INVALID_TARGET",
-		"CANNOT_FORAGE",
-		"NOT_ENOUGH_RESOURCES",
-		"UNIT_ALREADY_ACTED",
-		"OK",
-	}[o]
-}
-
-func (o OrderStatus) MarshalText() (text []byte, err error) {
-	return []byte(o.String()), nil
 }

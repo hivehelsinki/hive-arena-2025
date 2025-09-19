@@ -3,15 +3,16 @@ package main
 import (
 	"fmt"
 	"os"
+	"math/rand"
 )
 
 import . "hive-arena/common"
 
+var dirs = []Direction{E, SE, SW, W, NW, NE}
+
 func think(state *GameState, player int) []Order {
 
 	var orders []Order
-
-	//fmt.Printf("%+v\n", state)
 
 	for coords, hex := range state.Hexes {
 		unit := hex.Entity
@@ -21,7 +22,7 @@ func think(state *GameState, player int) []Order {
 			orders = append(orders, Order{
 				Type: MOVE,
 				Coords: coords,
-				Direction: E,
+				Direction: dirs[rand.Intn(len(dirs))],
 			})
 		}
 	}

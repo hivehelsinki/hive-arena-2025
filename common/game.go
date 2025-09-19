@@ -28,12 +28,12 @@ type Entity struct {
 	Player int        `json:"player"`
 }
 
-type EntityType int
+type EntityType string
 
 const (
-	WALL EntityType = iota
-	HIVE
-	BEE
+	WALL = "WALL"
+	HIVE = "HIVE"
+	BEE  = "BEE"
 )
 
 type Influence int
@@ -57,28 +57,28 @@ type Order struct {
 	Status    OrderStatus `json:"status"`
 }
 
-type OrderType int
+type OrderType string
 
 const (
-	MOVE OrderType = iota
-	ATTACK
-	BUILD_WALL
-	BUILD_HIVE
-	FORAGE
-	SPAWN
+	MOVE       = "MOVE"
+	ATTACK     = "ATTACK"
+	BUILD_WALL = "BUILD_WALL"
+	BUILD_HIVE = "BUILD_HIVE"
+	FORAGE     = "FORAGE"
+	SPAWN      = "SPAWN"
 )
 
-type OrderStatus int
+type OrderStatus string
 
 const (
-	PENDING OrderStatus = iota
-	INVALID_UNIT
-	BLOCKED
-	INVALID_TARGET
-	CANNOT_FORAGE
-	NOT_ENOUGH_RESOURCES
-	UNIT_ALREADY_ACTED
-	OK
+	PENDING              = "PENDING"
+	INVALID_UNIT         = "INVALID_UNIT"
+	BLOCKED              = "BLOCKED"
+	INVALID_TARGET       = "INVALID_TARGET"
+	CANNOT_FORAGE        = "CANNOT_FORAGE"
+	NOT_ENOUGH_RESOURCES = "NOT_ENOUGH_RESOURCES"
+	UNIT_ALREADY_ACTED   = "UNIT_ALREADY_ACTED"
+	OK                   = "OK"
 )
 
 func (o *Order) UnitType() EntityType {

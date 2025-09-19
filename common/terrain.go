@@ -6,14 +6,13 @@ import (
 	"strings"
 )
 
-//go:generate stringer -type Terrain
-type Terrain int
+type Terrain string
 
 const (
-	INVALID Terrain = iota
-	EMPTY
-	ROCK
-	FIELD
+	INVALID = "INVALID"
+	EMPTY   = "EMPTY"
+	ROCK    = "ROCK"
+	FIELD   = "FIELD"
 )
 
 func (t Terrain) IsWalkable() bool {
@@ -54,15 +53,15 @@ func (c Coords) Distance(b Coords) int {
 }
 
 //go:generate stringer -type Direction
-type Direction int
+type Direction string
 
 const (
-	E Direction = iota
-	SE
-	SW
-	W
-	NW
-	NE
+	E  = "E"
+	SE = "SE"
+	SW = "SW"
+	W  = "W"
+	NW = "NW"
+	NE = "NE"
 )
 
 var directionToOffset = map[Direction]Coords{
