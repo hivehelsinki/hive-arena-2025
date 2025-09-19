@@ -36,11 +36,17 @@ const (
 	BEE
 )
 
+type Influence int
+
+func (inf Influence) IsZero() bool {
+	return inf < 0
+}
+
 type Hex struct {
-	Terrain   Terrain `json:"terrain"`
-	Resources uint    `json:"resources,omitempty"`
-	Influence int     `json:"influence"`
-	Entity    *Entity `json:"entity,omitempty"`
+	Terrain   Terrain   `json:"terrain"`
+	Resources uint      `json:"resources,omitzero"`
+	Influence Influence `json:"influence,omitzero"`
+	Entity    *Entity   `json:"entity,omitempty"`
 }
 
 type Order struct {
@@ -411,7 +417,7 @@ func (gs *GameState) updateInfluence() {
 
 		if len(closestPlayers) == 1 {
 			for player := range closestPlayers {
-				hex.Influence = player
+				hex.Influence = Influence(player)
 			}
 		} else {
 			hex.Influence = -1
