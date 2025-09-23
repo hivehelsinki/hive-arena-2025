@@ -28,15 +28,10 @@ func (c *Coords) FromString(s string) error {
 	return nil
 }
 
-func (c Coords) MarshalText() (text []byte, err error) {
+func (c Coords) MarshalText() ([]byte, error) {
 	return []byte(c.String()), nil
 }
 
 func (c *Coords) UnmarshalText(b []byte) error {
-	str := string(b)
-	err := c.FromString(str)
-	if err != nil {
-		return err
-	}
-	return nil
+	return c.FromString(string(b))
 }
