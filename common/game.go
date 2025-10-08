@@ -31,9 +31,9 @@ type Entity struct {
 type EntityType string
 
 const (
-	WALL = "WALL"
-	HIVE = "HIVE"
-	BEE  = "BEE"
+	WALL EntityType = "WALL"
+	HIVE EntityType = "HIVE"
+	BEE  EntityType = "BEE"
 )
 
 type Influence int
@@ -60,25 +60,25 @@ type Order struct {
 type OrderType string
 
 const (
-	MOVE       = "MOVE"
-	ATTACK     = "ATTACK"
-	BUILD_WALL = "BUILD_WALL"
-	BUILD_HIVE = "BUILD_HIVE"
-	FORAGE     = "FORAGE"
-	SPAWN      = "SPAWN"
+	MOVE       OrderType = "MOVE"
+	ATTACK     OrderType = "ATTACK"
+	BUILD_WALL OrderType = "BUILD_WALL"
+	BUILD_HIVE OrderType = "BUILD_HIVE"
+	FORAGE     OrderType = "FORAGE"
+	SPAWN      OrderType = "SPAWN"
 )
 
 type OrderStatus string
 
 const (
-	PENDING              = "PENDING"
-	INVALID_UNIT         = "INVALID_UNIT"
-	BLOCKED              = "BLOCKED"
-	INVALID_TARGET       = "INVALID_TARGET"
-	CANNOT_FORAGE        = "CANNOT_FORAGE"
-	NOT_ENOUGH_RESOURCES = "NOT_ENOUGH_RESOURCES"
-	UNIT_ALREADY_ACTED   = "UNIT_ALREADY_ACTED"
-	OK                   = "OK"
+	PENDING              OrderStatus = "PENDING"
+	INVALID_UNIT         OrderStatus = "INVALID_UNIT"
+	BLOCKED              OrderStatus = "BLOCKED"
+	INVALID_TARGET       OrderStatus = "INVALID_TARGET"
+	CANNOT_FORAGE        OrderStatus = "CANNOT_FORAGE"
+	NOT_ENOUGH_RESOURCES OrderStatus = "NOT_ENOUGH_RESOURCES"
+	UNIT_ALREADY_ACTED   OrderStatus = "UNIT_ALREADY_ACTED"
+	OK                   OrderStatus = "OK"
 )
 
 func (o *Order) UnitType() EntityType {

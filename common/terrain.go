@@ -9,10 +9,10 @@ import (
 type Terrain string
 
 const (
-	INVALID = "INVALID"
-	EMPTY   = "EMPTY"
-	ROCK    = "ROCK"
-	FIELD   = "FIELD"
+	INVALID Terrain = "INVALID"
+	EMPTY   Terrain = "EMPTY"
+	ROCK    Terrain = "ROCK"
+	FIELD   Terrain = "FIELD"
 )
 
 func (t Terrain) IsWalkable() bool {
@@ -56,12 +56,12 @@ func (c Coords) Distance(b Coords) int {
 type Direction string
 
 const (
-	E  = "E"
-	SE = "SE"
-	SW = "SW"
-	W  = "W"
-	NW = "NW"
-	NE = "NE"
+	E  Direction = "E"
+	SE Direction = "SE"
+	SW Direction = "SW"
+	W  Direction = "W"
+	NW Direction = "NW"
+	NE Direction = "NE"
 )
 
 var directionToOffset = map[Direction]Coords{
