@@ -3,29 +3,25 @@ package common
 import (
 	"fmt"
 	"iter"
-	"math"
 	"math/rand"
 	"slices"
 )
 
 const (
 	INIT_FIELD_FLOWERS = 60
-	INIT_HIVE_HP       = 12
-	INIT_BEE_HP        = 2
-	INIT_WALL_HP       = 6
-
 	BEE_COST  = 12
 	HIVE_COST = 24
 	WALL_COST = 6
-
+	WALL_ATTACK_CHANCE = 1.0/6.0
+	STUN_CHANCE = 1.0/2.0
 	HIVE_FIELD_OF_VIEW = 4
-	INFLUENCE_TIMEOUT  = 50
+	RESOURCE_TIMEOUT  = 50
 )
 
 type Entity struct {
 	Type   EntityType `json:"type"`
-	HP     int        `json:"hp"`
 	Player int        `json:"player"`
+	HasFlower bool		`jons:"hasFlower,omitzero"`
 }
 
 type EntityType string
@@ -36,16 +32,9 @@ const (
 	BEE  EntityType = "BEE"
 )
 
-type Influence int
-
-func (inf Influence) IsZero() bool {
-	return inf < 0
-}
-
 type Hex struct {
 	Terrain   Terrain   `json:"terrain"`
 	Resources uint      `json:"resources,omitzero"`
-	Influence Influence `json:"influence,omitzero"`
 	Entity    *Entity   `json:"entity,omitempty"`
 }
 
@@ -78,6 +67,7 @@ const (
 	CANNOT_FORAGE        OrderStatus = "CANNOT_FORAGE"
 	NOT_ENOUGH_RESOURCES OrderStatus = "NOT_ENOUGH_RESOURCES"
 	UNIT_ALREADY_ACTED   OrderStatus = "UNIT_ALREADY_ACTED"
+	UNIT_STUNNED 		OrderStatus = "UNIT_STUNNED"
 	OK                   OrderStatus = "OK"
 )
 
@@ -97,10 +87,12 @@ type GameState struct {
 	Turn                uint            `json:"turn"`
 	Hexes               map[Coords]*Hex `json:"hexes"`
 	PlayerResources     []uint          `json:"playerResources"`
-	LastInfluenceChange uint            `json:"lastInfluenceChange"`
+	LastResourceChange uint            `json:"lastResourceChange"`
 
 	Winners  []int `json:"winners,omitempty"`
 	GameOver bool  `json:"gameOver"`
+
+	stunned map[*Entity]bool
 }
 
 var playerMappings = [][]int{
@@ -140,9 +132,9 @@ func NewGameState(mapData MapData, numPlayers int) *GameState {
 
 		switch spawn.Kind {
 		case HIVE:
-			gs.Hexes[spawn.Coords].Entity = &Entity{Type: HIVE, HP: INIT_HIVE_HP, Player: player}
+			gs.Hexes[spawn.Coords].Entity = &Entity{Type: HIVE, Player: player}
 		case BEE:
-			gs.Hexes[spawn.Coords].Entity = &Entity{Type: BEE, HP: INIT_BEE_HP, Player: player}
+			gs.Hexes[spawn.Coords].Entity = &Entity{Type: BEE, Player: player}
 		}
 	}
 
@@ -153,7 +145,6 @@ func NewGameState(mapData MapData, numPlayers int) *GameState {
 	}
 
 	gs.PlayerResources = make([]uint, numPlayers)
-	gs.updateInfluence()
 	gs.checkEndGame()
 
 	return gs
@@ -190,6 +181,7 @@ func (gs *GameState) ProcessOrders(orders [][]*Order) ([]*Order, error) {
 	}
 
 	acted := make(map[*Entity]bool)
+	gs.stunned = make(map[*Entity]bool)
 	var processed []*Order
 
 	// Process round by round
@@ -222,6 +214,9 @@ func (gs *GameState) ProcessOrders(orders [][]*Order) ([]*Order, error) {
 			} else if acted[unit] {
 				order.Status = UNIT_ALREADY_ACTED
 				continue
+			} else if gs.stunned[unit] {
+				order.Status = UNIT_STUNNED
+				continue
 			} else {
 				gs.applyOrder(order)
 				acted[unit] = true
@@ -230,7 +225,6 @@ func (gs *GameState) ProcessOrders(orders [][]*Order) ([]*Order, error) {
 	}
 
 	gs.Turn++
-	gs.updateInfluence()
 	gs.checkEndGame()
 
 	return processed, nil
@@ -307,9 +301,12 @@ func (gs *GameState) applyAttackOrder(order *Order) {
 		return
 	}
 
-	entity.HP--
-	if entity.HP <= 0 {
+	if entity.Type == WALL && rand.Float64() < WALL_ATTACK_CHANCE {
 		gs.Hexes[order.Target()].Entity = nil
+	}
+
+	if entity.Type == BEE && rand.Float64() < STUN_CHANCE {
+		gs.stunned[entity] = true
 	}
 
 	order.Status = OK
@@ -326,7 +323,7 @@ func (gs *GameState) applyBuildWallOrder(order *Order) {
 		return
 	}
 
-	wall := &Entity{Type: WALL, HP: INIT_WALL_HP, Player: order.Player}
+	wall := &Entity{Type: WALL, Player: order.Player}
 	gs.Hexes[order.Target()].Entity = wall
 
 	order.Status = OK
@@ -340,27 +337,47 @@ func (gs *GameState) applyBuildHiveOrder(order *Order) {
 		return
 	}
 
-	hive := &Entity{Type: HIVE, HP: INIT_HIVE_HP, Player: order.Player}
+	hive := &Entity{Type: HIVE, Player: order.Player}
 	gs.Hexes[order.Coords].Entity = hive
 
 	order.Status = OK
 }
 
 func (gs *GameState) applyForageOrder(order *Order) {
-	if gs.getUnit(order) == nil {
+	bee := gs.getUnit(order)
+	if bee == nil {
 		return
 	}
 
-	hex := gs.Hexes[order.Coords]
-	if hex.Terrain != FIELD || hex.Resources == 0 {
+	if bee.HasFlower {
+
+		for _,n := range order.Coords.Neighbours() {
+			entity := gs.EntityAt(n)
+			if entity != nil && entity.Type == HIVE && entity.Player == bee.Player {
+				bee.HasFlower = false
+				gs.PlayerResources[order.Player]++
+
+				gs.LastResourceChange = gs.Turn
+
+				order.Status = OK
+				return
+			}
+		}
+
 		order.Status = CANNOT_FORAGE
-		return
+
+	} else {
+		hex := gs.Hexes[order.Coords]
+		if hex.Terrain != FIELD || hex.Resources == 0 {
+			order.Status = CANNOT_FORAGE
+			return
+		}
+
+		hex.Resources--
+		bee.HasFlower = true
+
+		order.Status = OK
 	}
-
-	hex.Resources--
-	gs.PlayerResources[order.Player]++
-
-	order.Status = OK
 }
 
 func (gs *GameState) applySpawnOrder(order *Order) {
@@ -374,7 +391,7 @@ func (gs *GameState) applySpawnOrder(order *Order) {
 		return
 	}
 
-	bee := &Entity{Type: BEE, HP: INIT_BEE_HP, Player: order.Player}
+	bee := &Entity{Type: BEE, Player: order.Player}
 	gs.Hexes[order.Target()].Entity = bee
 
 	order.Status = OK
@@ -392,100 +409,38 @@ func (gs *GameState) Hives() iter.Seq2[Coords, *Entity] {
 	}
 }
 
-func (gs *GameState) updateInfluence() {
+func (gs *GameState) checkEndGame() {
 
-	for coords, hex := range gs.Hexes {
-		minDist := math.MaxInt
-		closestPlayers := make(map[int]bool)
-		previousInfluence := hex.Influence
+	// No resources left
 
-		for hiveCoords, hive := range gs.Hives() {
-			dist := coords.Distance(hiveCoords)
-			if dist > HIVE_FIELD_OF_VIEW {
-				continue
-			}
-
-			if dist < minDist {
-				minDist = dist
-				clear(closestPlayers)
-			}
-
-			if dist <= minDist {
-				closestPlayers[hive.Player] = true
-			}
-		}
-
-		if len(closestPlayers) == 1 {
-			for player := range closestPlayers {
-				hex.Influence = Influence(player)
-			}
-		} else {
-			hex.Influence = -1
-		}
-
-		if hex.Influence != previousInfluence {
-			gs.LastInfluenceChange = gs.Turn
+	var resourcesLeft uint
+	for _, hex := range gs.Hexes {
+		resourcesLeft += hex.Resources
+		if hex.Entity != nil && hex.Entity.HasFlower {
+			resourcesLeft++
 		}
 	}
-}
 
-func (gs *GameState) checkEndGame() {
+	if resourcesLeft == 0 {
+		gs.GameOver = true
+	}
 
 	// No influence change in a while
 
-	if gs.Turn-gs.LastInfluenceChange > INFLUENCE_TIMEOUT {
+	if gs.Turn-gs.LastResourceChange > RESOURCE_TIMEOUT {
 		gs.GameOver = true
-		return
 	}
 
-	// Count influenced cells and hives
+	// Determine winners
 
-	influenceCounts := make([]int, gs.NumPlayers)
-	hiveCounts := make([]int, gs.NumPlayers)
-
-	for _, hex := range gs.Hexes {
-		if hex.Influence >= 0 {
-			influenceCounts[hex.Influence]++
-		}
-		if hex.Entity != nil && hex.Entity.Type == HIVE {
-			hiveCounts[hex.Entity.Player]++
-		}
-	}
-
-	// If a single player has hives, they win
-
-	playersWithHives := 0
-	for _, count := range hiveCounts {
-		if count > 0 {
-			playersWithHives++
-		}
-	}
-
-	if playersWithHives == 1 {
-		for player, count := range hiveCounts {
-			if count > 0 {
+	if gs.GameOver {
+		maxResources := slices.Max(gs.PlayerResources)
+		for player, resources := range gs.PlayerResources {
+			if resources == maxResources {
 				gs.Winners = append(gs.Winners, player)
-				break
 			}
 		}
-		gs.GameOver = true
-		return
 	}
-
-	// Check if anyone has more than half the map influenced
-
-	maxInfluence := slices.Max(influenceCounts)
-	if maxInfluence <= len(gs.Hexes)/2 {
-		return
-	}
-
-	for player, influence := range influenceCounts {
-		if influence == maxInfluence {
-			gs.Winners = append(gs.Winners, player)
-		}
-	}
-
-	gs.GameOver = true
 }
 
 func (gs *GameState) isVisibleBy(coords Coords, player int) bool {
@@ -504,7 +459,7 @@ func (gs *GameState) PlayerView(player int) *GameState {
 		NumPlayers:          gs.NumPlayers,
 		Turn:                gs.Turn,
 		Hexes:               make(map[Coords]*Hex),
-		LastInfluenceChange: gs.LastInfluenceChange,
+		LastResourceChange: gs.LastResourceChange,
 		Winners:             gs.Winners,
 		GameOver:            gs.GameOver,
 	}

@@ -1,6 +1,6 @@
 # Game rules
 
-The game is a simple strategy game, similar to Warcraft, Starcraft or Command and Conquer. Players build buildings, spawn units, gather ressources and compete to achieve a particular goal, such as conquest, domination, etc.
+The game is a simple strategy game, similar to Warcraft, Starcraft or Command and Conquer. Players build buildings, spawn units, gather resources and compete to achieve a particular goal: most resources collected.
 
 The theme is hives, bees and flowers, obviously :)
 
@@ -17,7 +17,7 @@ The game is played on a hexagonal tiling of cells. Pre-written map files indicat
 
 Terrain can be of three types:
 
-- rock (unpassable and cannot be built in)
+- rock (impassable and cannot be built in)
 - empty
 - flower fields, from which resources (flowers) can be foraged
 
@@ -29,7 +29,7 @@ Players start the game with, and can create entities of three types:
 
 - wax wall, a building that does not move, and simply blocks movement
 - hive, a building that does not move, and can create more bees
-- bee, a mobile unit which can perform most actions in the game
+- bee, a mobile unit which can perform most actions in the game (a bee can additionally be carrying a flower)
 
 There can only ever be one entity per cell, which therefore prevents movement or additional building into that cell.
 
@@ -58,47 +58,39 @@ Then, players' agents are expected to *simultaneously* submit commands for all t
 
 Commands are applied in rounds, as follows: in round N, the Nth commands of all player (if any) are gathered, shuffled and executed in a random order.
 
-In order words, each players' commands will be executed in the order they are submitted, but interleaved randomly with the other players' for fairness. This gives players an incentive to place their most critical commands towards the beginning of their list.
+That is, each players' commands will be executed in the order they are submitted, but interleaved randomly with the other players' for fairness. This gives players an incentive to place their most critical commands towards the beginning of their list.
 
 Each unit or building can only perform a single action in a turn: subsequent attempts fail.
 
 The possible commands for bees are the following:
 
 - `move`: move one step in a given direction.
-- `forage`: gather one flower from the field the bee is currently in. The field's flowers are reduced by one, and the player's resources immediately increase by one. If the bee is not in a field, or that field is empty, the command fails.
+- `forage`: if the bee is not currently carrying a flower, gather one flower from the field it is currently in. The field's flowers are reduced by one, and the bee is now carrying a flower. If the bee is not in a field, or that field is empty, the command fails.
+If the bee is carrying a flower, and is adjacent to a hive of the same player, the player's resources are immediately increased by one, and the bee is not longer carrying a flower. If the bee is not adjacent to a hive of the same player, the command fails.
 - `build wall`: create a wax wall.
 - `build hive`: replace the bee with a hive in its current cell.
-- `attack`: attack the entity in the adjacent cell in the given direction. The target entity's hit point are reduced by one. If they are brought down to zero, that entity is destroyed. If the target cell is empty, nothing happens.
+- `attack`: attack the entity in the adjacent cell in the given direction. If it is a wax wall, it is destroyed with 1 in 6 chance. If it is a bee, it is stunned with 1 in 2 chance, and cannot act later during this round (nothing happens if it has already acted).
 
 The possible commands for hives are:
 
 - `spawn bee`: create a new bee.
 
-The commands `move`, `build wall`, and `spawn bee` all take a direction as parameter: they target the adjacent cell in the given direction. If that cell is blocked (the terrain is stone, or it contains an entity already), the command fails.
+The commands `move`, `build wall`, `attack`, and `spawn bee` all take a direction as parameter: they target the adjacent cell in the given direction. If that cell is blocked (the terrain is stone, or it contains an entity already), the command fails.
 
 The commands `build wall`, `build hive` and `spawn bee` all have a cost in resources: the player's resources are immediately reduced by that cost. If the player does not have enough resources to pay that cost, the command fails.
 
-### Influence
-
-At the end of each turn, each player's influence is updated. All cells within the field of view of a hive are under its influence. If a cell is in the field of view of multiple players, it belongs to the one with the closest hive, if any.
-
 ### Victory conditions
 
-At the end of the turn, the game state is checked for victory conditions. A player wins if:
+The game ends when all flower fields are depleted and no bee is carrying flowers. The winner is the player with most flowers accumulated.
 
-- they are the only player with units or buildings remaining.
-- OR: they influence more than 50% of all the cells in the map.
-
-If several players reach victory conditions on the same turn, the one with most influence wins. Otherwise, the game is a shared victory between these players.
-
-The game ends in a draw if there has been no change in influence counts in the last N turns.
+The game also ends if there has been no change in resource counts in the last N turns.
 
 ## Hardcoded values
 
-|          | Cost | Starting HP |
-|----------|------|-------------|
-| Bee      | 12   | 2           |
-| Hive     | 24   | 12          |
-| Wax wall | 6    | 6           |
+|          | Cost |
+|----------|------|
+| Bee      | 6    |
+| Hive     | 12   |
+| Wax wall | 1    |
 
-Flower field initial content: 120 flowers.
+Flower field initial content: 8 flowers.
