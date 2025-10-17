@@ -52,7 +52,6 @@ func (c Coords) Distance(b Coords) int {
 	return drow + max(0, (dcol-drow)/2)
 }
 
-//go:generate stringer -type Direction
 type Direction string
 
 const (
@@ -105,14 +104,14 @@ func LoadMap(path string) (MapData, error) {
 	gameMap := make(map[Coords]Terrain)
 	spawns := []Spawn{}
 
-	for trow, line := range lines {
-		for tcol, char := range line {
+	for row, line := range lines {
+		for col, char := range line {
+			coords := Coords{row, col / 2}
+
 			if terrain, ok := charToTerrain[char]; ok {
-				coords := Coords{trow, tcol / 2}
 				gameMap[coords] = terrain
 			} else if kind, ok := charToSpawn[char]; ok {
-				coords := Coords{trow, tcol / 2}
-				playerStr := string(line[tcol+1])
+				playerStr := string(line[col+1])
 				player, _ := strconv.Atoi(playerStr)
 
 				spawns = append(spawns, Spawn{
