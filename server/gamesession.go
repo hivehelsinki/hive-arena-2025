@@ -23,8 +23,8 @@ type Player struct {
 }
 
 type Turn struct {
-	Orders []*Order
-	State  *GameState
+	Orders []*Order   `json:"orders"`
+	State  *GameState `json:"state"`
 }
 
 type GameSession struct {

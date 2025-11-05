@@ -20,7 +20,7 @@ const (
 type Entity struct {
 	Type      EntityType `json:"type"`
 	Player    int        `json:"player"`
-	HasFlower bool       `jons:"hasFlower,omitzero"`
+	HasFlower bool       `json:"hasFlower,omitzero"`
 }
 
 type EntityType string
@@ -464,7 +464,7 @@ func (gs *GameState) PlayerView(player int) *GameState {
 
 func (gs *GameState) Clone() *GameState {
 	hexes := make(map[Coords]*Hex)
-	for k,v := range gs.Hexes {
+	for k, v := range gs.Hexes {
 		hex := *v
 		hexes[k] = &hex
 	}
@@ -475,13 +475,13 @@ func (gs *GameState) Clone() *GameState {
 	winners := make([]int, len(gs.Winners))
 	copy(winners, gs.Winners)
 
-	return &GameState {
-		NumPlayers: gs.NumPlayers,
-		Turn: gs.Turn,
-		Hexes: hexes,
-		PlayerResources: playerResources,
+	return &GameState{
+		NumPlayers:         gs.NumPlayers,
+		Turn:               gs.Turn,
+		Hexes:              hexes,
+		PlayerResources:    playerResources,
 		LastResourceChange: gs.LastResourceChange,
-		Winners: winners,
-		GameOver: gs.GameOver,
+		Winners:            winners,
+		GameOver:           gs.GameOver,
 	}
 }
