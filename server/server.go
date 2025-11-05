@@ -317,6 +317,6 @@ func RunServer(port int) {
 
 	log.Printf("Listening on port %d", port)
 
-	err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+	err := http.ListenAndServe(":"+strconv.Itoa(port), nil)
 	fmt.Println(err)
 }
