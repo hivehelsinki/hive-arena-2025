@@ -466,22 +466,22 @@ func (gs *GameState) Clone() *GameState {
 	hexes := make(map[Coords]*Hex)
 	for k, v := range gs.Hexes {
 		hex := *v
+
+		if hex.Entity != nil {
+			copy := *hex.Entity
+			hex.Entity = &copy
+		}
+
 		hexes[k] = &hex
 	}
-
-	playerResources := make([]uint, len(gs.PlayerResources))
-	copy(playerResources, gs.PlayerResources)
-
-	winners := make([]int, len(gs.Winners))
-	copy(winners, gs.Winners)
 
 	return &GameState{
 		NumPlayers:         gs.NumPlayers,
 		Turn:               gs.Turn,
 		Hexes:              hexes,
-		PlayerResources:    playerResources,
+		PlayerResources:    slices.Clone(gs.PlayerResources),
 		LastResourceChange: gs.LastResourceChange,
-		Winners:            winners,
+		Winners:            slices.Clone(gs.Winners),
 		GameOver:           gs.GameOver,
 	}
 }
