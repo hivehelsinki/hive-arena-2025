@@ -9,7 +9,6 @@ import (
 type Terrain string
 
 const (
-	INVALID Terrain = "INVALID"
 	EMPTY   Terrain = "EMPTY"
 	ROCK    Terrain = "ROCK"
 	FIELD   Terrain = "FIELD"
