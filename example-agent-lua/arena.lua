@@ -79,7 +79,7 @@ local function runAgent(host, gameid, name, callback)
 	local currentTurn = 0
 	local socket = openWebSocket(host, gameid)
 
-	local function runRound()
+	local function run()
 		local state = getState(host, gameid, token)
 		currentTurn = state.turn
 
@@ -87,7 +87,7 @@ local function runAgent(host, gameid, name, callback)
 		sendOrders(host, gameid, token, orders)
 	end
 
-	runRound()
+	run()
 
 	for text in socket:each() do
 		local message = json.decode(text)
@@ -96,7 +96,7 @@ local function runAgent(host, gameid, name, callback)
 			break
 		elseif message.turn > currentTurn then
 			print("Turn " .. message.turn .. " starts")
-			runRound()
+			run()
 		end
 	end
 end
