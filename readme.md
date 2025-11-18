@@ -13,7 +13,7 @@ In addition to the API routes to be used programmatically, the `/status` route s
 
 ## Development mode
 
-By default, the server ensures a minimum turn duration of 0.5 seconds. To bypass that restriction, for instance for local automated testing, you can pass the `--dev` command line option to the server. 
+By default, the server ensures a minimum turn duration of 0.5 seconds. To bypass that restriction, for instance for local automated testing, you can pass the `--dev` command line option to the server.
 
 ## Building for production
 
@@ -25,7 +25,7 @@ Example agents are provided in Lua and Go. These templates abstract the network 
 
 That allows you to focus on the logic of your agent instead of the implementation details.
 
-See readme files in each directory.
+See readme files in each relevant directory.
 
 ## Developing agents in other languages
 
