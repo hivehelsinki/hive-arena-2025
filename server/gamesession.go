@@ -24,11 +24,6 @@ type Player struct {
 	Token string
 }
 
-type Turn struct {
-	Orders []*Order   `json:"orders,omitempty"`
-	State  *GameState `json:"state"`
-}
-
 type GameSession struct {
 	mutex sync.Mutex
 
@@ -211,11 +206,11 @@ func (game *GameSession) persist() {
 		game.Map,
 	)
 
-	info := map[string]any{
-		"id":          game.ID,
-		"map":         game.Map,
-		"createdDate": game.CreatedDate,
-		"history":     game.History,
+	info := PersistedGame{
+		Id:          game.ID,
+		Map:         game.Map,
+		CreatedDate: game.CreatedDate,
+		History:     game.History,
 	}
 
 	file, _ := os.Create(path)

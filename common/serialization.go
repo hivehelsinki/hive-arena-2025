@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func (c Coords) String() string {
@@ -34,4 +35,16 @@ func (c Coords) MarshalText() ([]byte, error) {
 
 func (c *Coords) UnmarshalText(b []byte) error {
 	return c.FromString(string(b))
+}
+
+type PersistedGame struct {
+	Id          string    `json:"id"`
+	Map         string    `json:"map"`
+	CreatedDate time.Time `json:"createdDate"`
+	History     []Turn    `json:"history"`
+}
+
+type Turn struct {
+	Orders []*Order   `json:"orders,omitempty"`
+	State  *GameState `json:"state"`
 }
