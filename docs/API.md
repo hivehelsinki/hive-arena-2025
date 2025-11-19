@@ -158,4 +158,6 @@ When the game begins, and every time a turn is processed, the following message 
 }
 ```
 
+If a websocket is opened after the game has already begun, an initial message similar to the one above is sent to the listener to indicate the current turn.
+
 After sending a message with `gameOver` set to `true`, the server closes the websocket.

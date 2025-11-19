@@ -180,20 +180,28 @@ func (game *GameSession) RegisterWebSocket(socket *websocket.Conn) {
 	defer game.mutex.Unlock()
 
 	game.Sockets = append(game.Sockets, socket)
+
+	if game.IsFull() {
+		game.notifySocket(socket)
+	}
 }
 
-func (game *GameSession) notifySockets() {
+func (game *GameSession) notifySocket(socket *websocket.Conn) {
 	message, _ := json.Marshal(map[string]any{
 		"turn":     game.State.Turn,
 		"gameOver": game.State.GameOver,
 	})
 
-	for _, socket := range game.Sockets {
-		socket.WriteMessage(websocket.TextMessage, message)
+	socket.WriteMessage(websocket.TextMessage, message)
 
-		if game.State.GameOver {
-			socket.Close()
-		}
+	if game.State.GameOver {
+		socket.Close()
+	}
+}
+
+func (game *GameSession) notifySockets() {
+	for _, socket := range game.Sockets {
+		game.notifySocket(socket)
 	}
 }
 

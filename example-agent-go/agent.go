@@ -114,8 +114,6 @@ func Run(host string, id string, name string, callback func(*GameState, int) []O
 		sendOrders(host, id, playerInfo.Token, orders)
 	}
 
-	run()
-
 	for {
 		var message WebSocketMessage
 		err := ws.ReadJSON(&message)

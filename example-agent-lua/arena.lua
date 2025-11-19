@@ -87,8 +87,6 @@ local function runAgent(host, gameid, name, callback)
 		sendOrders(host, gameid, token, orders)
 	end
 
-	run()
-
 	for text in socket:each() do
 		local message = json.decode(text)
 		if message.gameOver then
