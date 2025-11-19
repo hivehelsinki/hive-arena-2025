@@ -27,7 +27,9 @@ var PlayerColors = []color.Color{
 }
 
 type Viewer struct {
-	Game   *PersistedGame
+	Game *PersistedGame
+	Turn int
+
 	Cx, Cy float64
 	Scale  float64
 }
@@ -48,6 +50,14 @@ func (viewer *Viewer) Update() error {
 		tx, ty := m.Apply(float64(x), float64(y))
 		viewer.Cx = tx / Dx * 2
 		viewer.Cy = ty / Dy
+	}
+
+	if inpututil.IsKeyJustPressed(ebiten.KeyRight) && viewer.Turn < len(viewer.Game.History)-1 {
+		viewer.Turn++
+	}
+
+	if inpututil.IsKeyJustPressed(ebiten.KeyLeft) && viewer.Turn > 0 {
+		viewer.Turn--
 	}
 
 	return nil
@@ -102,7 +112,7 @@ func (viewer *Viewer) DrawState(screen *ebiten.Image, state *GameState) {
 }
 
 func (viewer *Viewer) Draw(screen *ebiten.Image) {
-	viewer.DrawState(screen, viewer.Game.History[0].State)
+	viewer.DrawState(screen, viewer.Game.History[viewer.Turn].State)
 }
 
 func (viewer *Viewer) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
