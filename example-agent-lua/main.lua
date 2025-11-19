@@ -9,6 +9,7 @@ local name = args[3]
 
 if not host or not gameid or not name then
 	print "Usage: lua main.lua <host> <gameid> <name>"
+	return
 end
 
 local function makeOrders(state, player)
