@@ -5,11 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
-	//		"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"image/color"
 	"io"
 	"net/http"
 	"slices"
-	"image/color"
 )
 
 import . "hive-arena/common"
@@ -18,15 +18,13 @@ const Dx = 32
 const Dy = 16
 
 var PlayerColors = []color.Color{
-	color.RGBA{255,   0,   0, 255},
-	color.RGBA{255, 255,   0, 255},
-	color.RGBA{  0, 255,   0, 255},
-	color.RGBA{  0, 255, 255, 255},
-	color.RGBA{  0,   0, 255, 255},
-	color.RGBA{255,   0, 255, 255},
+	color.RGBA{255, 0, 0, 255},
+	color.RGBA{255, 255, 0, 255},
+	color.RGBA{0, 255, 0, 255},
+	color.RGBA{0, 255, 255, 255},
+	color.RGBA{0, 0, 255, 255},
+	color.RGBA{255, 0, 255, 255},
 }
-
-var Tile1 *ebiten.Image
 
 type Viewer struct {
 	Game   *PersistedGame
@@ -41,6 +39,15 @@ func (viewer *Viewer) Update() error {
 		viewer.Scale *= 1.5
 	} else if dy < 0 {
 		viewer.Scale /= 1.5
+	}
+
+	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		x, y := ebiten.CursorPosition()
+		m := viewer.CoordsToTransform(Coords{0, 0})
+		m.Invert()
+		tx, ty := m.Apply(float64(x), float64(y))
+		viewer.Cx = tx / Dx * 2
+		viewer.Cy = ty / Dy
 	}
 
 	return nil
