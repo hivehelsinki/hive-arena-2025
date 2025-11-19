@@ -18,12 +18,12 @@ const Dx = 32
 const Dy = 16
 
 var PlayerColors = []color.Color{
-	color.RGBA{255, 0, 0, 255},
-	color.RGBA{255, 255, 0, 255},
-	color.RGBA{0, 255, 0, 255},
-	color.RGBA{0, 255, 255, 255},
-	color.RGBA{0, 0, 255, 255},
-	color.RGBA{255, 0, 255, 255},
+	color.RGBA{255, 100, 100, 255},
+	color.RGBA{255, 255, 100, 255},
+	color.RGBA{100, 255, 100, 255},
+	color.RGBA{100, 255, 255, 255},
+	color.RGBA{100, 100, 255, 255},
+	color.RGBA{255, 100, 255, 255},
 }
 
 type Viewer struct {
