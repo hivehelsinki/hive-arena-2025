@@ -1,11 +1,13 @@
 package main
 
 import (
+	"image"
+	"bytes"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 import . "hive-arena/common"
+import _ "embed"
 
 var TerrainTiles map[Terrain]*ebiten.Image
 var EmptyFieldTile *ebiten.Image
@@ -17,17 +19,38 @@ var EntityOffset = map[EntityType]float64{
 	WALL: 8,
 }
 
+//go:embed tile-empty.png
+var TileEmpty []byte
+//go:embed tile-rock.png
+var TileRock []byte
+//go:embed tile-field.png
+var TileField []byte
+//go:embed tile-field-empty.png
+var TileFieldEmpty []byte
+
+//go:embed bee.png
+var SpriteBee []byte
+//go:embed hive.png
+var SpriteHive []byte
+//go:embed wall.png
+var SpriteWall []byte
+
+func loadImage(data []byte) *ebiten.Image {
+	img, _, _ := image.Decode(bytes.NewReader(data))
+	return ebiten.NewImageFromImage(img)
+}
+
 func LoadResources() {
 	TerrainTiles = make(map[Terrain]*ebiten.Image)
 
-	TerrainTiles[EMPTY], _, _ = ebitenutil.NewImageFromFile("tile-empty.png")
-	TerrainTiles[ROCK], _, _ = ebitenutil.NewImageFromFile("tile-rock.png")
-	TerrainTiles[FIELD], _, _ = ebitenutil.NewImageFromFile("tile-field.png")
-	EmptyFieldTile, _, _ = ebitenutil.NewImageFromFile("tile-field-empty.png")
+	TerrainTiles[EMPTY] = loadImage(TileEmpty)
+	TerrainTiles[ROCK] = loadImage(TileRock)
+	TerrainTiles[FIELD] = loadImage(TileField)
+	EmptyFieldTile = loadImage(TileFieldEmpty)
 
 	EntityTiles = make(map[EntityType]*ebiten.Image)
 
-	EntityTiles[BEE], _, _ = ebitenutil.NewImageFromFile("bee.png")
-	EntityTiles[HIVE], _, _ = ebitenutil.NewImageFromFile("hive.png")
-	EntityTiles[WALL], _, _ = ebitenutil.NewImageFromFile("wall.png")
+	EntityTiles[BEE] = loadImage(SpriteBee)
+	EntityTiles[HIVE] = loadImage(SpriteHive)
+	EntityTiles[WALL] = loadImage(SpriteWall)
 }

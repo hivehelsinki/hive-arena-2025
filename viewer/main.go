@@ -37,9 +37,9 @@ type Viewer struct {
 func (viewer *Viewer) Update() error {
 
 	_, dy := ebiten.Wheel()
-	if dy > 0 {
+	if dy > 0 || inpututil.IsKeyJustPressed(ebiten.KeyW) {
 		viewer.Scale *= 1.5
-	} else if dy < 0 {
+	} else if dy < 0 || inpututil.IsKeyJustPressed(ebiten.KeyQ) {
 		viewer.Scale /= 1.5
 	}
 
