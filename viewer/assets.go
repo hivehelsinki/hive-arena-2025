@@ -1,9 +1,9 @@
 package main
 
 import (
-	"image"
 	"bytes"
 	"github.com/hajimehoshi/ebiten/v2"
+	"image"
 )
 
 import . "hive-arena/common"
@@ -22,19 +22,25 @@ var EntityOffset = map[EntityType]float64{
 
 //go:embed tile-empty.png
 var TileEmpty []byte
+
 //go:embed tile-rock.png
 var TileRock []byte
+
 //go:embed tile-field.png
 var TileField []byte
+
 //go:embed tile-field-empty.png
 var TileFieldEmpty []byte
 
 //go:embed bee.png
 var SpriteBee []byte
+
 //go:embed hive.png
 var SpriteHive []byte
+
 //go:embed wall.png
 var SpriteWall []byte
+
 //go:embed flower.png
 var SpriteFlower []byte
 

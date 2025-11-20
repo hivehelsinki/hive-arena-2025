@@ -31,7 +31,7 @@ type Viewer struct {
 	Cx, Cy float64
 	Scale  float64
 
-	Live 	*LiveGame
+	Live *LiveGame
 }
 
 func (viewer *Viewer) Update() error {
@@ -70,17 +70,17 @@ func (viewer *Viewer) Update() error {
 
 	if viewer.Live != nil {
 		select {
-			case turn := <-viewer.Live.Channel:
-				fmt.Printf("Turn %d\n", turn)
+		case turn := <-viewer.Live.Channel:
+			fmt.Printf("Turn %d\n", turn)
 
-				state := getState(viewer.Live.Host, viewer.Live.Id, viewer.Live.Token)
-				if state != nil {
-					viewer.Game.History = append(viewer.Game.History, Turn{nil, state})
-					if viewer.Turn == len(viewer.Game.History) - 2 {
-						viewer.Turn++
-					}
+			state := getState(viewer.Live.Host, viewer.Live.Id, viewer.Live.Token)
+			if state != nil {
+				viewer.Game.History = append(viewer.Game.History, Turn{nil, state})
+				if viewer.Turn == len(viewer.Game.History)-2 {
+					viewer.Turn++
 				}
-			default:
+			}
+		default:
 		}
 	}
 
@@ -221,7 +221,7 @@ func main() {
 	viewer := &Viewer{
 		Game:  game,
 		Scale: 1.0,
-		Live: live,
+		Live:  live,
 	}
 	err := ebiten.RunGame(viewer)
 

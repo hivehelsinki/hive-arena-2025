@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"io"
 	"net/http"
 	"os"
-	"github.com/gorilla/websocket"
 )
 
 import . "hive-arena/common"
@@ -96,7 +96,7 @@ func getState(host string, id string, token string) *GameState {
 
 type LiveGame struct {
 	Host, Id, Token string
-	Channel chan int
+	Channel         chan int
 }
 
 func StartLiveWatch(host string, gameId string, token string) (*PersistedGame, *LiveGame) {
@@ -128,5 +128,5 @@ func StartLiveWatch(host string, gameId string, token string) (*PersistedGame, *
 
 	go updateGame()
 
-	return &PersistedGame {Id: gameId}, &LiveGame{host, gameId, token, liveChannel}
+	return &PersistedGame{Id: gameId}, &LiveGame{host, gameId, token, liveChannel}
 }
