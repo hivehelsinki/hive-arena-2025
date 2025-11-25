@@ -52,7 +52,7 @@ local function findEnemyEntity(coords, hexes, player)
 	end
 end
 
-local function makeOrders(state, player, index)
+local function makeOrders(state, player)
 
 	local orders = {}
 
@@ -111,7 +111,7 @@ local function runGame()
 
 		local porders = {}
 		for p = 0, state.numPlayers - 1 do
-			table.insert(porders, makeOrders(state, p, index))
+			table.insert(porders, makeOrders(state, p))
 		end
 
 		local payload = {
