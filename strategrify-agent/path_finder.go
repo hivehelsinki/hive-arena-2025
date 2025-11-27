@@ -1,31 +1,42 @@
 package main
 
-// should get the known map & goal where to go
-// returns an array or list of shortest path to the goal
-// or if not path found then nil?
-func (as *AgentState) BFS(start, goal Coords) ([]Coords, bool) {
+// checks if the coordinate hex has a wall
+func (as *AgentState) IsWall(c Coords) bool {
+    for _, w := range as.Walls {
+        if w == c {
+            return true
+        }
+    }
+    return false
+}
+
+// gets start and goal coordinates and the map
+// returns the path to the goal and true, or
+// nil and false if no path is possible
+
+// do we save the path to our memory and check if the path is still valid next turn?
+// because walls may rise up or the path may change, might be faster to check if the generated path
+// is still available than always to create new path
+func (as *AgentState) find_path(start, goal Coords) ([]Coords, bool) {
     type node struct {
         Hex_c	Coords
         Prev	*node
     }
 
-    visited := make(map[Coords]bool) //(x,y), known?
-
-    // Use a queue of *node so Prev pointers are stable
+    visited := make(map[Coords]bool)
     startNode := &node{Hex_c: start, Prev: nil}
-    queue := []*node{startNode} // slice array that holds pointers of nodes (currently we just add one startNode there)
-    visited[start] = true      // finds the start node from the map and marks it as true, so we have visited there
+    queue := []*node{startNode}
+    visited[start] = true
 
-    for len(queue) > 0 // as long as we have terrain/map to go through in the queue
+    for len(queue) > 0
 	{
-        current := queue[0] // we take the first from the queue
-        queue = queue[1:] // slices the queue from the second to everything else of the array effective popping the first off from array
+        current := queue[0]
+        queue = queue[1:]
 
-        if current.Hex_c == goal { // if the current terrain is the goal
-            // reconstruct path by following Prev pointers
-            var path []Coords // this is slice not array
+        if current.Hex_c == goal {
+            var path []Coords
             for n := current; n != nil; n = n.Prev {
-                path = append([]Coords{n.Hex_c}, path...) // append to the slice always the current node, and always the previous to the front of the old effectively making it from start -> end
+                path = append([]Coords{n.Hex_c}, path...);
             }
             return path, true
         }
@@ -36,18 +47,18 @@ func (as *AgentState) BFS(start, goal Coords) ([]Coords, bool) {
             // Only allow path on known tiles:
             terrain, ok := as.Map[next]
             if !ok {
-                continue // unknown tile -> cannot use (change if you want to allow exploring unknowns)
+                continue
             }
-            if terrain == ROCK {
-                continue // not walkable
+            if terrain == ROCK || as.IsWall(next) == true {
+                continue
             }
-			// can we stand on hive?
-			// we also need to check if there is a wall on a terrain and go around it
+			// should we check if there are opponent bees on our path?
+            // if so then go around them?
 
-            if !visited[next] { // if next isnt in visited array?
-                visited[next] = true // ad it there and make it true so we know it has been visited?
+            if !visited[next] {
+                visited[next] = true
                 nextNode := &node{Hex_c: next, Prev: current}
-                queue = append(queue, nextNode) // should this be queue ... ?
+                queue = append(queue, nextNode)
             }
         }
     }
