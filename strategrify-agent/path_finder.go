@@ -1,5 +1,9 @@
 package main
 
+import (
+	. "hive-arena/common"
+)
+
 // checks if the coordinate hex has a wall
 func (as *AgentState) IsWall(c Coords) bool {
     for _, w := range as.Walls {
@@ -28,8 +32,7 @@ func (as *AgentState) find_path(start, goal Coords) ([]Coords, bool) {
     queue := []*node{startNode}
     visited[start] = true
 
-    for len(queue) > 0
-	{
+    for len(queue) > 0{
         current := queue[0]
         queue = queue[1:]
 
