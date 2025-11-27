@@ -1,7 +1,7 @@
 package main
 
 import (
-	//"fmt"
+	"fmt"
 	"math/rand"
 	//"os"
 
@@ -50,12 +50,24 @@ func commands(state *GameState, player int, as *AgentState) []Order {
 			// otherwise move towards nearest hive if we know one
 	// EMILLIAS PATHFINDER WILL GO HERE
 			if foundHive {
-				if dir, ok := as.BestDirectionTowards(b.Coords, nearest); ok {
-					if _, ok := IsValidMoveTarget(as, b.Coords, dir); ok {
-						orders = append(orders, Order{Type: MOVE, Coords: b.Coords, Direction: dir})
-						continue
+				path, ok := as.find_path(b.Coords, nearest)
+				fmt.Println("i am here")
+				fmt.Println("set:", path)
+				fmt.Println("get:", path[1])
+				fmt.Println("len:", len(path))
+				if !ok {
+					fmt.Println("i am here")
+					if dir, ok := as.BestDirectionTowards(b.Coords, nearest); ok {
+						if _, ok := IsValidMoveTarget(as, b.Coords, dir); ok {
+							orders = append(orders, Order{Type: MOVE, Coords: b.Coords, Direction: dir})
+							continue
+						}
 					}
 				}
+				if dir, ok := as.BestDirectionTowards(b.Coords, path[1]); ok {
+					orders = append(orders, Order{Type: MOVE, Coords: b.Coords, Direction: dir})
+				}
+				continue
 			}
 
 			maxTries := 10
@@ -90,13 +102,27 @@ func commands(state *GameState, player int, as *AgentState) []Order {
 		// otherwise move toward nearest visible flower
 		target, ok := as.GetNearestFlower(b.Coords)
 		if ok {
-	// EMILIAS PATHFINDER WILL GO HERE
-			if dir, ok2 := as.BestDirectionTowards(b.Coords, target); ok2 {
-				if _, ok := IsValidMoveTarget(as, b.Coords, dir); ok {
-					orders = append(orders, Order{Type: MOVE, Coords: b.Coords, Direction: dir})
-					continue
+			path, ok2 := as.find_path(b.Coords, target)
+			if !ok2 {
+				if dir, ok3 := as.BestDirectionTowards(b.Coords, target); ok3 {
+					if _, ok4 := IsValidMoveTarget(as, b.Coords, dir); ok4 {
+						orders = append(orders, Order{Type: MOVE, Coords: b.Coords, Direction: dir})
+						continue
+					}
 				}
 			}
+			if dir, ok := as.BestDirectionTowards(b.Coords, path[1]); ok {
+				orders = append(orders, Order{Type: MOVE, Coords: b.Coords, Direction: dir})
+			}
+			continue
+
+			// EMILIAS PATHFINDER WILL GO HERE
+			// if dir, ok2 := as.BestDirectionTowards(b.Coords, target); ok2 {
+			// 	if _, ok := IsValidMoveTarget(as, b.Coords, dir); ok {
+			// 		orders = append(orders, Order{Type: MOVE, Coords: b.Coords, Direction: dir})
+			// 		continue
+			// 	}
+			// }
 		}
 		//maybe better move to oposite direction than hive
 		
