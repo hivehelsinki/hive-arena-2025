@@ -26,8 +26,7 @@ var PlayerColors = []color.Color{
 	color.RGBA{255, 100, 255, 255},
 }
 
-
-const AutoplaySpeed = 10	// ebiten runs 60 ticks per second, so 6 turns per second
+const AutoplaySpeed = 10 // ebiten runs 60 ticks per second, so 6 turns per second
 
 type Viewer struct {
 	Game *PersistedGame

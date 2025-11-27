@@ -147,7 +147,7 @@ func (server *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 
 	response := StatusResponse{
 		GitRevision: GitRevision(),
-		Games: statuses,
+		Games:       statuses,
 	}
 
 	writeJson(w, response, http.StatusOK)
