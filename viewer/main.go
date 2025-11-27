@@ -26,6 +26,9 @@ var PlayerColors = []color.Color{
 	color.RGBA{255, 100, 255, 255},
 }
 
+
+const AutoplaySpeed = 10	// ebiten runs 60 ticks per second, so 6 turns per second
+
 type Viewer struct {
 	Game *PersistedGame
 	Turn int
@@ -34,6 +37,10 @@ type Viewer struct {
 	Scale  float64
 
 	Live *LiveGame
+
+	// Autoplay
+	Playing   bool
+	PlayTimer int
 }
 
 func (viewer *Viewer) Update() error {
@@ -54,12 +61,41 @@ func (viewer *Viewer) Update() error {
 		viewer.Cy = ty / Dy
 	}
 
-	if inpututil.IsKeyJustPressed(ebiten.KeyRight) && viewer.Turn < len(viewer.Game.History)-1 {
-		viewer.Turn++
+	// Toggle Autoplay with Space
+	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		viewer.Playing = !viewer.Playing
+		viewer.PlayTimer = 0
 	}
 
-	if inpututil.IsKeyJustPressed(ebiten.KeyLeft) && viewer.Turn > 0 {
-		viewer.Turn--
+	// Run Autoplay
+	if viewer.Playing {
+		viewer.PlayTimer--
+		if viewer.PlayTimer <= 0 {
+			if viewer.Turn < len(viewer.Game.History)-1 {
+				viewer.Turn++
+				viewer.PlayTimer = AutoplaySpeed
+			} else {
+				viewer.Playing = false
+			}
+		}
+	}
+
+	//add modifying how far left/right takes you: shift+arrow moves 10 turns, ctrl+arrow moves 50 turns
+	step := 1
+	if ebiten.IsKeyPressed(ebiten.KeyShift) || ebiten.IsKeyPressed(ebiten.KeyShiftLeft) || ebiten.IsKeyPressed(ebiten.KeyShiftRight) {
+		step = 10
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyControl) || ebiten.IsKeyPressed(ebiten.KeyControlLeft) || ebiten.IsKeyPressed(ebiten.KeyControlRight) ||
+		ebiten.IsKeyPressed(ebiten.KeyAlt) || ebiten.IsKeyPressed(ebiten.KeyAltLeft) || ebiten.IsKeyPressed(ebiten.KeyAltRight) {
+		step = 50
+	}
+	//use modified step length, clamp to maximum len - 1
+	if inpututil.IsKeyJustPressed(ebiten.KeyRight) {
+		viewer.Turn = min(viewer.Turn+step, len(viewer.Game.History)-1)
+	}
+	//use modified step length, clamp to minimum 0
+	if inpututil.IsKeyJustPressed(ebiten.KeyLeft) {
+		viewer.Turn = max(viewer.Turn-step, 0)
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyUp) {
