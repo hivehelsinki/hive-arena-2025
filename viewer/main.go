@@ -26,8 +26,8 @@ var PlayerColors = []color.Color{
 	color.RGBA{255, 100, 255, 255},
 }
 
-//ebiten runs 60 ticks per second (?), so 6 turns per second 
-const AutoplaySpeed = 10
+
+const AutoplaySpeed = 10	// ebiten runs 60 ticks per second, so 6 turns per second
 
 type Viewer struct {
 	Game *PersistedGame
@@ -38,7 +38,7 @@ type Viewer struct {
 
 	Live *LiveGame
 
-	// New fields for autoplay
+	// Autoplay
 	Playing   bool
 	PlayTimer int
 }
@@ -71,7 +71,7 @@ func (viewer *Viewer) Update() error {
 	if viewer.Playing {
 		viewer.PlayTimer--
 		if viewer.PlayTimer <= 0 {
-			if viewer.Turn < len(viewer.Game.History) - 1 {
+			if viewer.Turn < len(viewer.Game.History)-1 {
 				viewer.Turn++
 				viewer.PlayTimer = AutoplaySpeed
 			} else {
@@ -85,16 +85,17 @@ func (viewer *Viewer) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyShift) || ebiten.IsKeyPressed(ebiten.KeyShiftLeft) || ebiten.IsKeyPressed(ebiten.KeyShiftRight) {
 		step = 10
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyControl) || ebiten.IsKeyPressed(ebiten.KeyControlLeft) || ebiten.IsKeyPressed(ebiten.KeyControlRight) {
+	if ebiten.IsKeyPressed(ebiten.KeyControl) || ebiten.IsKeyPressed(ebiten.KeyControlLeft) || ebiten.IsKeyPressed(ebiten.KeyControlRight) ||
+		ebiten.IsKeyPressed(ebiten.KeyAlt) || ebiten.IsKeyPressed(ebiten.KeyAltLeft) || ebiten.IsKeyPressed(ebiten.KeyAltRight) {
 		step = 50
 	}
 	//use modified step length, clamp to maximum len - 1
-	if inpututil.IsKeyJustPressed(ebiten.KeyRight) && viewer.Turn < len(viewer.Game.History)-1 {
-		viewer.Turn = min(viewer.Turn + step, len(viewer.Game.History) - 1)
+	if inpututil.IsKeyJustPressed(ebiten.KeyRight) {
+		viewer.Turn = min(viewer.Turn+step, len(viewer.Game.History)-1)
 	}
 	//use modified step length, clamp to minimum 0
-	if inpututil.IsKeyJustPressed(ebiten.KeyLeft) && viewer.Turn > 0 {
-		viewer.Turn = max(viewer.Turn - step, 0)
+	if inpututil.IsKeyJustPressed(ebiten.KeyLeft) {
+		viewer.Turn = max(viewer.Turn-step, 0)
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyUp) {
