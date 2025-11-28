@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image/color"
 	"slices"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -212,6 +213,19 @@ func (viewer *Viewer) DrawInfo(screen *ebiten.Image, state *GameState) {
 	txtOp.ColorScale.Reset()
 	txtOp.GeoM.Translate(0, LineHeight)
 	text.Draw(screen, fmt.Sprintf("Game over: %v", state.GameOver), Font, txtOp)
+
+	if state.GameOver {
+		txtOp.GeoM.Translate(0, LineHeight)
+		var winners []string
+		for _, winnerId := range state.Winners {
+			winners = append(winners, viewer.Game.Players[winnerId])
+		}
+		txt := "Winner: "
+		if len(winners) > 1 {
+			txt = "Winners: "
+		}
+		text.Draw(screen, txt+strings.Join(winners, ", "), Font, txtOp)
+	}
 }
 
 func (viewer *Viewer) Draw(screen *ebiten.Image) {
