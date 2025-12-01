@@ -53,7 +53,7 @@ func commands(state *GameState, player int, as *AgentState) []Order {
 			}
 
 			if foundHive {
-				path, ok := as.find_path(b.Coords, nearest)
+				path, ok := as.find_path(b, nearest)
 				if !ok || len(path) <= 1 {
 					if dir, ok2 := as.BestDirectionTowards(b.Coords, nearest); ok2 {
 						if _, ok3 := IsValidMoveTarget(as, b.Coords, dir); ok3 {
@@ -101,7 +101,7 @@ func commands(state *GameState, player int, as *AgentState) []Order {
 		// otherwise move toward nearest visible flower
 		target, ok := as.GetNearestFlower(b.Coords)
 		if ok {
-			path, ok2 := as.find_path(b.Coords, target)
+			path, ok2 := as.find_path(b, target)
 			// If we have no usable path, try greedy best-direction towards target -> just the shortest distance path
 			if !ok2 || len(path) <= 1 {
 				if dir, ok3 := as.BestDirectionTowards(b.Coords, target); ok3 {
