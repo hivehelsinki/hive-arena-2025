@@ -187,6 +187,10 @@ func (as *AgentState) GetNearestFlower(from Coords) (Coords, bool) {
     for c := range as.Flowers {
         d := from.Distance(c)
         if !found || d < bestDist {
+            hex, ok := as.Hexes[c]
+            if !ok || hex.Entity != nil {
+                continue
+            }
             bestDist = d
             best = c
             found = true
