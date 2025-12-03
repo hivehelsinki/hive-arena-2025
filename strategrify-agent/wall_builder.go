@@ -88,6 +88,7 @@ func BuildWallOrders(state *GameState, player int, as *AgentState) []Order {
 		if owner == player {
 			continue
 		}
+		
 		for _, hive := range hiveList {
 			// try every direction outward from hive
 			for dir := range DirectionToOffset {
