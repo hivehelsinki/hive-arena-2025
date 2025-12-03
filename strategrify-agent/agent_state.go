@@ -216,7 +216,7 @@ func (as *AgentState) UpdateFromGameState(gs *GameState, player int) {
 	// Persistent identity tracking: match visible bees to tracked bees so
 	// roles persist across moves. We'll match by nearest Last coords within
 	// a small threshold; unmatched bees become new tracked bees and receive
-	// a role chosen to balance role counts.
+	// a role chosen based on spawn order or role balancing.
 	roleList := []BeeRole{RoleHarvester, RoleScout, RoleDefender}
 	as.BeeRoles = make(map[Coords]BeeRole)
 
@@ -231,7 +231,7 @@ func (as *AgentState) UpdateFromGameState(gs *GameState, player int) {
 
 	matchedTracked := make(map[string]bool)
 	// For deterministic behavior, iterate visible bees in their existing order
-	for _, u := range as.MyBees {
+	for beeIdx, u := range as.MyBees {
 		bestID := ""
 		bestDist := 1 << 30
 		for id, tb := range as.TrackedBees {
@@ -255,14 +255,22 @@ func (as *AgentState) UpdateFromGameState(gs *GameState, player int) {
 			continue
 		}
 
-		// No match -> create new tracked bee and choose a role with minimal count
-		counts := roleCounts()
-		chosen := roleList[0]
-		minc := counts[chosen]
-		for _, r := range roleList {
-			if counts[r] < minc {
-				chosen = r
-				minc = counts[r]
+		// No match -> create new tracked bee and choose a role
+		// Early game: if we have <= 3 bees total and few tracked bees, assign initial roles deterministically
+		// beeIdx 0 -> Harvester, beeIdx 1 -> Scout, beeIdx 2 -> Defender
+		// Otherwise balance by role count
+		var chosen BeeRole
+		if len(as.TrackedBees) < 3 && len(as.MyBees) <= 3 && beeIdx < len(roleList) {
+			chosen = roleList[beeIdx]
+		} else {
+			counts := roleCounts()
+			chosen = roleList[0]
+			minc := counts[chosen]
+			for _, r := range roleList {
+				if counts[r] < minc {
+					chosen = r
+					minc = counts[r]
+				}
 			}
 		}
 		newID := fmt.Sprintf("tb-%d-%d", as.NextTrackedID, as.Turn)
@@ -301,22 +309,22 @@ func (as *AgentState) IsFlower(c Coords) bool {
 
 // GetNearestFlower returns the coord and whether it found one.
 func (as *AgentState) GetNearestFlower(from Coords) (Coords, bool) {
-    var best Coords
-    bestDist := -1
-    found := false
-    for c := range as.Flowers {
-        d := from.Distance(c)
-        if !found || d < bestDist {
-            hex, ok := as.Hexes[c]
-            if !ok || hex.Entity != nil {
-                continue
-            }
-            bestDist = d
-            best = c
-            found = true
-        }
-    }
-    return best, found
+	var best Coords
+	bestDist := -1
+	found := false
+	for c := range as.Flowers {
+		d := from.Distance(c)
+		if !found || d < bestDist {
+			hex, ok := as.Hexes[c]
+			if !ok || hex.Entity != nil {
+				continue
+			}
+			bestDist = d
+			best = c
+			found = true
+		}
+	}
+	return best, found
 }
 
 // BestDirectionTowards tries all neighbors and picks a direction that brings the
@@ -405,7 +413,8 @@ func (as *AgentState) DetailedString() string {
 		b.WriteString("  (none)\n")
 	} else {
 		for _, u := range as.MyBees {
-			b.WriteString(fmt.Sprintf("  (%d,%d) hasFlower=%v\n", u.Coords.Row, u.Coords.Col, u.HasFlower))
+			role := as.GetBeeRole(u.Coords)
+			b.WriteString(fmt.Sprintf("  (%d,%d) hasFlower=%v role=%s\n", u.Coords.Row, u.Coords.Col, u.HasFlower, role))
 		}
 	}
 
