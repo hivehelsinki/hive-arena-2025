@@ -301,18 +301,22 @@ func (as *AgentState) IsFlower(c Coords) bool {
 
 // GetNearestFlower returns the coord and whether it found one.
 func (as *AgentState) GetNearestFlower(from Coords) (Coords, bool) {
-	var best Coords
-	bestDist := -1
-	found := false
-	for c := range as.Flowers {
-		d := from.Distance(c)
-		if !found || d < bestDist {
-			bestDist = d
-			best = c
-			found = true
-		}
-	}
-	return best, found
+    var best Coords
+    bestDist := -1
+    found := false
+    for c := range as.Flowers {
+        d := from.Distance(c)
+        if !found || d < bestDist {
+            hex, ok := as.Hexes[c]
+            if !ok || hex.Entity != nil {
+                continue
+            }
+            bestDist = d
+            best = c
+            found = true
+        }
+    }
+    return best, found
 }
 
 // BestDirectionTowards tries all neighbors and picks a direction that brings the
