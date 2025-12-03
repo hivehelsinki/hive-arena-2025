@@ -25,6 +25,10 @@ func BuildHivesOrders(state *GameState, player int, as *AgentState) []Order {
 
 	// Check each bee to see if you ares a princess that wants to become a queen
 	for _, bee := range as.MyBees {
+		hex, ok := as.Map[bee.Coords]
+		if !ok || hex == FIELD {
+			continue
+		}
 		flowerCount := 0
 		flowerResources := 0
 		for flowerCoord, resources := range as.Flowers {
