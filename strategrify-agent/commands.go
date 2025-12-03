@@ -17,6 +17,8 @@ func commands(state *GameState, player int, as *AgentState) []Order {
 	// try to spawn new bees first
 	orders = append(orders, BuildHivesOrders(state, player, as)...)
 	orders = append(orders, BuildSpawnOrders(state, player, as)...)
+	// wall-building/rushing behaviour: have raiding bees move and build walls near enemy hives
+	orders = append(orders, BuildWallOrders(state, player, as)...)
 	// here spawn new hives --------------------------------///////////////////////////////////////////
 	//////////////////////////////////////// EMILIA
 
